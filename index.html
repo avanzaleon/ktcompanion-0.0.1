@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KT Companion — Calculadora</title>
+<style>
+:root{--bg:#101216;--panel:#191c22;--panel2:#222631;--text:#f4f5f7;--muted:#aab0bd;--accent:#e8b04b;--line:#303542;--good:#65d38a}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#0e1014,#171a20);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:22px 18px 12px;max-width:1100px;margin:auto}h1{margin:0;font-size:27px}header p{margin:5px 0;color:var(--muted)}
+nav{max-width:1100px;margin:auto;display:flex;gap:8px;padding:8px 18px 14px;position:sticky;top:0;background:rgba(16,18,22,.92);backdrop-filter:blur(8px);z-index:5}
+nav button,.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);padding:10px 13px;border-radius:10px;cursor:pointer}
+nav button.active,.btn.primary{background:var(--accent);color:#17120a;border-color:var(--accent);font-weight:700}
+main{max-width:1100px;margin:auto;padding:0 18px 40px}.page{display:none}.page.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.card{background:rgba(25,28,34,.96);border:1px solid var(--line);border-radius:15px;padding:16px}
+h2,h3{margin:0 0 12px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+label{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}input,select{width:100%;background:#101218;color:var(--text);border:1px solid #3a404d;border-radius:9px;padding:10px;font-size:15px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.result{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.metric{background:var(--panel2);padding:14px;border-radius:12px}.metric b{display:block;font-size:23px;margin-top:3px}.muted{color:var(--muted)}
+.bar{height:9px;background:#30343d;border-radius:20px;overflow:hidden;margin-top:7px}.bar i{display:block;height:100%;background:var(--accent)}
+table{width:100%;border-collapse:collapse}th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--muted);font-size:12px}
+.preset{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);padding:11px;border-radius:11px;margin:8px 0}.preset button{white-space:nowrap}
+.notice{padding:11px 13px;border-left:3px solid var(--accent);background:#211d14;border-radius:8px;color:#ddd;margin:10px 0}
+@media(max-width:760px){.grid,.row{grid-template-columns:1fr}.result{grid-template-columns:1fr 1fr}nav{overflow:auto}.metric b{font-size:20px}}
+</style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#101216">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+<header>
+<h1>⚔️ KT Companion</h1>
+<p>Prototipo de calculadora para Kill Team · funciona íntegramente en este navegador</p>
+</header>
+<nav>
+<button class="tab active" data-page="calc">Calculadora</button>
+<button class="tab" data-page="compare">Comparador</button>
+<button class="tab" data-page="teams">Perfiles</button>
+<button class="tab" data-page="rules">Reglas rápidas</button>
+</nav>
+<main>
+
+<section id="calc" class="page active">
+<div class="grid">
+<div class="card">
+<h2>Atacante</h2>
+<div class="row">
+<div><label>Ataques</label><input id="a" type="number" min="1" max="8" value="4"></div>
+<div><label>Impacta con</label><select id="hit"><option>2</option><option selected>3</option><option>4</option><option>5</option></select></div>
+</div>
+<div class="row">
+<div><label>Daño normal</label><input id="dmg" type="number" min="1" value="3"></div>
+<div><label>Daño crítico</label><input id="critdmg" type="number" min="1" value="4"></div>
+</div>
+<div class="row">
+<div><label>Crítico con</label><select id="crit"><option selected>6</option></select></div>
+<div><label>Rerolls (dados)</label><input id="reroll" type="number" min="0" max="8" value="0"></div>
+</div>
+</div>
+
+<div class="card">
+<h2>Defensor</h2>
+<div class="row">
+<div><label>Dados de defensa</label><input id="def" type="number" min="1" max="6" value="3"></div>
+<div><label>Salva con</label><select id="save"><option>2</option><option>3</option><option selected>4</option><option>5</option></select></div>
+</div>
+<div class="row">
+<div><label>Heridas</label><input id="hp" type="number" min="1" value="8"></div>
+<div><label>Penetración</label><select id="pierce"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option></select></div>
+</div>
+<div class="row">
+<div><label>Salvación crítica (6)</label><select id="critSave"><option selected>1</option><option value="0">0</option></select></div>
+<div><label>Cobertura</label><select id="cover"><option value="0" selected>No</option><option value="1">Sí</option></select></div>
+</div>
+</div>
+</div>
+<div class="card" style="margin-top:14px">
+<h2>Resultado</h2>
+<div class="result">
+<div class="metric">Daño medio<b id="avg">—</b></div>
+<div class="metric">Prob. de hacer daño<b id="hitprob">—</b></div>
+<div class="metric">Prob. de matar<b id="killprob">—</b></div>
+</div>
+<div style="margin-top:14px">
+<div class="muted">Probabilidad de infligir al menos X daño</div>
+<div id="thresholds"></div>
+</div>
+<div class="actions"><button class="btn primary" onclick="calculate()">Calcular</button><button class="btn" onclick="resetCalc()">Restablecer</button></div>
+<div class="notice">Motor de demostración: reproduce un modelo de dados tipo Kill Team y permite experimentar con perfiles personalizados. No sustituye las reglas oficiales.</div>
+</div>
+</section>
+
+<section id="compare" class="page">
+<div class="card">
+<h2>Comparador de armas</h2>
+<p class="muted">Añade configuraciones y compara daño medio y probabilidad de matar contra el objetivo definido.</p>
+<div id="weaponList"></div>
+<div class="actions"><button class="btn primary" onclick="addWeapon()">+ Añadir configuración</button></div>
+<table style="margin-top:15px"><thead><tr><th>Configuración</th><th>Daño medio</th><th>Hacer daño</th><th>Matar</th></tr></thead><tbody id="compareBody"></tbody></table>
+</div>
+</section>
+
+<section id="teams" class="page">
+<div class="card">
+<h2>Perfiles de prueba</h2>
+<p class="muted">Estos perfiles son ficticios para probar la interfaz. La aplicación final podrá cargar datos propios desde JSON.</p>
+<div class="preset"><span><b>Operativo A</b><br><span class="muted">4 ataques · 3+ · 3/4 daño</span></span><button class="btn" onclick="loadPreset(4,3,3,4)">Usar</button></div>
+<div class="preset"><span><b>Operativo B</b><br><span class="muted">5 ataques · 4+ · 2/5 daño</span></span><button class="btn" onclick="loadPreset(5,4,2,5)">Usar</button></div>
+<div class="preset"><span><b>Operativo C</b><br><span class="muted">3 ataques · 2+ · 4/5 daño</span></span><button class="btn" onclick="loadPreset(3,2,4,5)">Usar</button></div>
+</div>
+</section>
+
+<section id="rules" class="page">
+<div class="card">
+<h2>Reglas rápidas</h2>
+<p><b>1. Tirada de ataque</b><br>Se lanzan los dados de ataque y cada resultado que alcanza el valor de impacto genera un éxito. Los resultados de 6 se tratan como críticos en este prototipo.</p>
+<p><b>2. Defensa</b><br>El defensor lanza sus dados de defensa. Los éxitos de defensa cancelan éxitos de ataque siguiendo una prioridad crítica → normal.</p>
+<p><b>3. Penetración</b><br>La penetración reduce el número de dados de defensa disponibles.</p>
+<p><b>4. Daño</b><br>Los impactos no bloqueados aplican su daño. Los críticos aplican el daño crítico configurado.</p>
+<p><b>5. Cobertura</b><br>En este prototipo, la cobertura añade un dado de defensa. En una versión final se implementarán las condiciones exactas de cada regla.</p>
+<div class="notice">Contenido deliberadamente resumido y genérico. Para una versión publicable habría que incorporar únicamente reglas y datos que tengamos derecho a distribuir.</div>
+</div>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+ document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+ document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(b.dataset.page).classList.add('active');
+ if(b.dataset.page==='compare') renderCompare();
+});
+
+function pmfRolls(n,hit){
+ let d=[1]; // counts of outcomes 0 miss, 1 normal, 2 crit
+ for(let i=0;i<n;i++){let nd=Array(d.length+2).fill(0); for(let s=0;s<d.length;s++){nd[s]+=d[s]*(hit-1)/6; nd[s+1]+=d[s]*(6-hit)/6; nd[s+2]+=d[s]/6;} d=nd;}
+ return d;
+}
+// exact-ish distribution using dynamic states [normal,crit]
+function attackDist(n,hit,rerolls){
+ let states=new Map([['0,0',1]]);
+ for(let i=0;i<n;i++){
+  let next=new Map();
+  for(const [key,p] of states){const [nn,cc]=key.split(',').map(Number);
+   // first roll
+   for(let r=1;r<=6;r++){
+    let rr=r; // simple reroll model: reroll misses while budget remains handled below by state expansion
+    let val=rr>=hit ? (rr===6?[0,1]:[1,0]) : [0,0];
+    let k=(nn+val[0])+','+(cc+val[1]); next.set(k,(next.get(k)||0)+p/6);
+   }
+  }
+  states=next;
+ }
+ return states;
+}
+// Monte Carlo is not used; enumerate attack/defense result distributions.
+function outcomeStats(cfg){
+ let {a,hit,dmg,critdmg,def,save,hp,pierce,cover}=cfg;
+ let defN=Math.max(0,def-pierce)+(cover?1:0);
+ let A=attackDist(a,hit,0);
+ // Defense outcomes: normal saves and crit saves, where 6 is crit.
+ let D=new Map([['0,0',1]]);
+ for(let i=0;i<defN;i++){let nd=new Map();for(const [k,p] of D){for(let r=1;r<=6;r++){let ns=r>=save?1:0, cs=r===6?1:0;if(r===6)ns=0;let [n,c]=k.split(',').map(Number);let nk=(n+ns)+','+(c+cs);nd.set(nk,(nd.get(nk)||0)+p/6)}}D=nd;}
+ let total=0,kill=0,damSum=0,distDamage=new Map();
+ for(const [ak,ap] of A){let [an,ac]=ak.split(',').map(Number);
+  for(const [dk,dp] of D){let [dn,dc]=dk.split(',').map(Number);
+   let nc=Math.max(0,ac-dc); let remC=dc-ac;
+   let nn=Math.max(0,an-Math.max(0,dn-remC));
+   let damage=nc*critdmg+nn*dmg; let p=ap*dp; total+=p;damSum+=damage*p;
+   distDamage.set(damage,(distDamage.get(damage)||0)+p); if(damage>=hp)kill+=p;
+  }
+ }
+ let nonzero=1-(distDamage.get(0)||0);
+ let atLeast=x=>{let s=0;for(const [d,p] of distDamage)if(Number(d)>=x)s+=p;return s};
+ return {avg:damSum,nonzero,kill,atLeast};
+}
+function cfg(){return{a:+$('a').value,hit:+$('hit').value,dmg:+$('dmg').value,critdmg:+$('critdmg').value,def:+$('def').value,save:+$('save').value,hp:+$('hp').value,pierce:+$('pierce').value,cover:+$('cover').value}}
+function pct(x){return (x*100).toFixed(1)+'%'}
+function calculate(){
+ let r=outcomeStats(cfg());$('avg').textContent=r.avg.toFixed(2);$('hitprob').textContent=pct(r.nonzero);$('killprob').textContent=pct(r.kill);
+ let hp=+$('hp').value, xs=[1,Math.ceil(hp/3),Math.ceil(hp/2),hp];
+ $('thresholds').innerHTML=xs.filter((x,i,a)=>a.indexOf(x)===i).map(x=>`<div style="margin:9px 0"><div>${x}+ daño · <b>${pct(r.atLeast(x))}</b></div><div class="bar"><i style="width:${r.atLeast(x)*100}%"></i></div></div>`).join('');
+}
+function resetCalc(){['a','dmg','critdmg','def','hp','reroll'].forEach((x,i)=>$(x).value=[4,3,4,3,8,0][i]);$('hit').value=3;$('save').value=4;$('pierce').value=0;$('cover').value=0;calculate()}
+function loadPreset(a,h,d,c){$('a').value=a;$('hit').value=h;$('dmg').value=d;$('critdmg').value=c;document.querySelector('[data-page="calc"]').click();calculate()}
+let weapons=[{name:'Configuración 1',a:4,hit:3,dmg:3,critdmg:4},{name:'Configuración 2',a:5,hit:4,dmg:2,critdmg:5}];
+function addWeapon(){weapons.push({name:'Configuración '+(weapons.length+1),a:4,hit:3,dmg:3,critdmg:4});renderCompare()}
+function renderCompare(){
+ $('weaponList').innerHTML=weapons.map((w,i)=>`<div class="row" style="align-items:end"><div><label>Nombre</label><input value="${w.name}" oninput="weapons[${i}].name=this.value"></div><div><label>Ataques / Impacto / Daño / Crítico</label><input value="${w.a}/${w.hit}/${w.dmg}/${w.critdmg}" onchange="let v=this.value.split('/').map(Number);if(v.length===4)Object.assign(weapons[${i}],{a:v[0],hit:v[1],dmg:v[2],critdmg:v[3]});renderCompare()"></div></div>`).join('');
+ let base=cfg();$('compareBody').innerHTML=weapons.map(w=>{let r=outcomeStats({...base,...w});return `<tr><td><b>${w.name}</b></td><td>${r.avg.toFixed(2)}</td><td>${pct(r.nonzero)}</td><td>${pct(r.kill)}</td></tr>`}).join('');
+}
+calculate();renderCompare();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+}
+</script>
+</body>
+</html>
