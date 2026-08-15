@@ -21,6 +21,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:10px 8px;border-bottom:1
 .preset{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);padding:11px;border-radius:11px;margin:8px 0}.preset button{white-space:nowrap}
 .notice{padding:11px 13px;border-left:3px solid var(--accent);background:#211d14;border-radius:8px;color:#ddd;margin:10px 0}
 @media(max-width:760px){.grid,.row{grid-template-columns:1fr}.result{grid-template-columns:1fr 1fr}nav{overflow:auto}.metric b{font-size:20px}}
+.profileGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.stat{background:var(--panel2);border-radius:10px;padding:10px;text-align:center}.stat small{display:block;color:var(--muted);font-size:11px}.stat b{font-size:20px}.weapon{border:1px solid var(--line);background:#14171d;border-radius:11px;padding:12px;margin:8px 0}.weaponHead{display:flex;justify-content:space-between;gap:10px;align-items:center}.tags{color:var(--muted);font-size:12px;margin-top:4px}@media(max-width:760px){.profileGrid{grid-template-columns:repeat(2,1fr)}}
 </style>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#101216">
@@ -34,7 +35,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:10px 8px;border-bottom:1
 <nav>
 <button class="tab active" data-page="calc">Calculadora</button>
 <button class="tab" data-page="compare">Comparador</button>
-<button class="tab" data-page="teams">Perfiles</button>
+<button class="tab" data-page="teams">Ejércitos</button>
 <button class="tab" data-page="rules">Reglas rápidas</button>
 </nav>
 <main>
@@ -101,11 +102,13 @@ table{width:100%;border-collapse:collapse}th,td{padding:10px 8px;border-bottom:1
 
 <section id="teams" class="page">
 <div class="card">
-<h2>Perfiles de prueba</h2>
-<p class="muted">Estos perfiles son ficticios para probar la interfaz. La aplicación final podrá cargar datos propios desde JSON.</p>
-<div class="preset"><span><b>Operativo A</b><br><span class="muted">4 ataques · 3+ · 3/4 daño</span></span><button class="btn" onclick="loadPreset(4,3,3,4)">Usar</button></div>
-<div class="preset"><span><b>Operativo B</b><br><span class="muted">5 ataques · 4+ · 2/5 daño</span></span><button class="btn" onclick="loadPreset(5,4,2,5)">Usar</button></div>
-<div class="preset"><span><b>Operativo C</b><br><span class="muted">3 ataques · 2+ · 4/5 daño</span></span><button class="btn" onclick="loadPreset(3,2,4,5)">Usar</button></div>
+<h2>Perfiles por ejército</h2>
+<p class="muted">Primera prueba: <b>Angels of Death</b>. Selecciona un operativo y después un arma para enviarla directamente a la calculadora.</p>
+<div class="row">
+<div><label>Ejército</label><select id="armySelect" onchange="renderArmy()"><option value="aod">Angels of Death</option></select></div>
+<div><label>Operativo</label><select id="operativeSelect" onchange="renderOperative()"></select></div>
+</div>
+<div id="operativeCard"></div>
 </div>
 </section>
 
@@ -175,6 +178,31 @@ function outcomeStats(cfg){
 }
 function cfg(){return{a:+$('a').value,hit:+$('hit').value,dmg:+$('dmg').value,critdmg:+$('critdmg').value,def:+$('def').value,save:+$('save').value,hp:+$('hp').value,pierce:+$('pierce').value,cover:+$('cover').value}}
 function pct(x){return (x*100).toFixed(1)+'%'}
+const armies={aod:{name:"Angels of Death",operatives:[
+{name:"Space Marine Captain",a:3,m:'6"',s:'3+',w:15,weapons:[
+["Plasma Pistol — Standard",4,3,3,5,"Prc1"],["Plasma Pistol — Supercharge",4,3,4,5,"Hot · Lethal 5+ · Prc1"],["Power Fist",5,3,5,7,"Brutal"]]},
+{name:"Assault Intercessor Sergeant",a:3,m:'6"',s:'3+',w:15,weapons:[
+["Hand Flamer",4,2,3,3,"Sat · Tor 1""],["Heavy Bolt Pistol",4,3,3,4,"PrcCrit1"],["Plasma Pistol — Standard",4,3,3,5,"Prc1"],["Plasma Pistol — Supercharge",4,3,4,5,"Hot · Lethal 5+ · Prc1"],["Chainsword",5,3,4,5,""],["Power Fist",5,4,5,7,"Brutal"],["Power Weapon",5,3,4,6,"Lethal 5+"],["Thunder Hammer",5,4,5,6,"Shock · Stun"]]},
+{name:"Intercessor Sergeant",a:3,m:'6"',s:'3+',w:15,weapons:[
+["Auto Bolt Rifle",4,3,3,4,'Tor 1"'],["Bolt Rifle",4,3,3,4,"PrcCrit1"],["Stalker Bolt Rifle",4,3,3,5,"Heavy · Lethal 5+ · PrcCrit1"],["Chainsword",4,3,4,5,""],["Fists",4,3,3,4,""],["Power Fist",4,4,5,7,"Brutal"],["Power Weapon",4,3,4,6,"Lethal 5+"],["Thunder Hammer",4,4,5,6,"Shock · Stun"]]},
+{name:"Eliminator Sniper",a:3,m:'7"',s:'3+',w:12,weapons:[
+["Bolt Pistol",4,3,3,4,'Rng 8"'],["Bolt Sniper Rifle — Executioner",4,2,3,4,"Heavy(Dash) · Sat · Seek Light · Silent"],["Bolt Sniper Rifle — Hyperfrag",4,2,2,4,'Blast 1" · Heavy(Dash) · Silent'],["Bolt Sniper Rifle — Mortis",4,2,3,3,"Dev3 · Heavy(Dash) · Prc1 · Silent"],["Fists",4,3,3,4,""]]},
+{name:"Assault Intercessor Grenadier",a:3,m:'6"',s:'3+',w:14,weapons:[
+["Heavy Bolt Pistol",4,3,3,4,"PrcCrit1"],["Chainsword",5,3,4,5,""],["Frag Grenade",4,3,2,4,'Blast 2" · Sat'],["Krak Grenade",4,3,4,5,"Prc1 · Sat"]]},
+{name:"Assault Intercessor Warrior",a:3,m:'6"',s:'3+',w:14,weapons:[
+["Heavy Bolt Pistol",4,3,3,4,"PrcCrit1"],["Chainsword",5,3,4,5,""]]},
+{name:"Heavy Intercessor Gunner",a:3,m:'5"',s:'3+',w:18,weapons:[
+["Bolt Pistol",4,3,3,4,'Rng 8"'],["Heavy Bolter — Focused",5,3,4,5,"PrcCrit1"],["Heavy Bolter — Sweeping",4,3,4,5,'PrcCrit1 · Tor 1"'],["Fists",4,3,3,4,""]]},
+{name:"Intercessor Gunner",a:3,m:'6"',s:'3+',w:14,weapons:[
+["Auto Bolt Rifle",4,3,3,4,'Tor 1"'],["Auxiliary Grenade Launcher — Frag",4,3,2,4,'Blast 2"'],["Auxiliary Grenade Launcher — Krak",4,3,4,5,"Prc1"],["Bolt Rifle",4,3,3,4,"PrcCrit1"],["Stalker Bolt Rifle",4,3,3,5,"Heavy · Lethal 5+ · PrcCrit1"],["Mobile",4,3,3,4,""],["Fists",4,3,3,4,""]]},
+{name:"Intercessor Warrior",a:3,m:'6"',s:'3+',w:14,weapons:[
+["Auto Bolt Rifle",4,3,3,4,'Tor 1"'],["Bolt Rifle",4,3,3,4,"PrcCrit1"],["Stalker Bolt Rifle",4,3,3,5,"Heavy · Lethal 5+ · PrcCrit1"],["Mobile",4,3,3,4,""],["Fists",4,3,3,4,""]]}
+]}};
+function renderArmy(){const a=armies[$('armySelect').value];$('operativeSelect').innerHTML=a.operatives.map((o,i)=>`<option value="${i}">${o.name}</option>`).join('');renderOperative()}
+function renderOperative(){const a=armies[$('armySelect').value],o=a.operatives[+$('operativeSelect').value];$('operativeCard').innerHTML=`<h3>${o.name}</h3><div class="profileGrid"><div class="stat"><small>ATAQUES</small><b>${o.a}</b></div><div class="stat"><small>MOVIMIENTO</small><b>${o.m}</b></div><div class="stat"><small>SALVACIÓN</small><b>${o.s}</b></div><div class="stat"><small>HERIDAS</small><b>${o.w}</b></div></div><h3 style="margin-top:16px">Armas</h3>${o.weapons.map((x,i)=>`<div class="weapon"><div class="weaponHead"><b>${x[0]}</b><button class="btn primary" onclick="useWeapon(${+$('operativeSelect').value},${i})">Usar en calculadora</button></div><div class="tags">${x[1]} ataques · ${x[2]}+ · ${x[3]}/${x[4]} daño ${x[5]?'· '+x[5]:''}</div></div>`).join('')}`}
+function useWeapon(oi,wi){const o=armies[$('armySelect').value].operatives[oi],w=o.weapons[wi];$('a').value=w[1];$('hit').value=w[2];$('dmg').value=w[3];$('critdmg').value=w[4];document.querySelector('[data-page="calc"]').click();calculate()}
+renderArmy();
+
 function calculate(){
  let r=outcomeStats(cfg());$('avg').textContent=r.avg.toFixed(2);$('hitprob').textContent=pct(r.nonzero);$('killprob').textContent=pct(r.kill);
  let hp=+$('hp').value, xs=[1,Math.ceil(hp/3),Math.ceil(hp/2),hp];
