@@ -1,227 +1,30 @@
 <!doctype html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KT Companion — Calculadora</title>
-<style>
-:root{--bg:#101216;--panel:#191c22;--panel2:#222631;--text:#f4f5f7;--muted:#aab0bd;--accent:#e8b04b;--line:#303542;--good:#65d38a}
-*{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#0e1014,#171a20);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-header{padding:22px 18px 12px;max-width:1100px;margin:auto}h1{margin:0;font-size:27px}header p{margin:5px 0;color:var(--muted)}
-nav{max-width:1100px;margin:auto;display:flex;gap:8px;padding:8px 18px 14px;position:sticky;top:0;background:rgba(16,18,22,.92);backdrop-filter:blur(8px);z-index:5}
-nav button,.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);padding:10px 13px;border-radius:10px;cursor:pointer}
-nav button.active,.btn.primary{background:var(--accent);color:#17120a;border-color:var(--accent);font-weight:700}
-main{max-width:1100px;margin:auto;padding:0 18px 40px}.page{display:none}.page.active{display:block}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.card{background:rgba(25,28,34,.96);border:1px solid var(--line);border-radius:15px;padding:16px}
-h2,h3{margin:0 0 12px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-label{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}input,select{width:100%;background:#101218;color:var(--text);border:1px solid #3a404d;border-radius:9px;padding:10px;font-size:15px}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.result{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.metric{background:var(--panel2);padding:14px;border-radius:12px}.metric b{display:block;font-size:23px;margin-top:3px}.muted{color:var(--muted)}
-.bar{height:9px;background:#30343d;border-radius:20px;overflow:hidden;margin-top:7px}.bar i{display:block;height:100%;background:var(--accent)}
-table{width:100%;border-collapse:collapse}th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--muted);font-size:12px}
-.preset{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);padding:11px;border-radius:11px;margin:8px 0}.preset button{white-space:nowrap}
-.notice{padding:11px 13px;border-left:3px solid var(--accent);background:#211d14;border-radius:8px;color:#ddd;margin:10px 0}
-@media(max-width:760px){.grid,.row{grid-template-columns:1fr}.result{grid-template-columns:1fr 1fr}nav{overflow:auto}.metric b{font-size:20px}}
-.profileGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.stat{background:var(--panel2);border-radius:10px;padding:10px;text-align:center}.stat small{display:block;color:var(--muted);font-size:11px}.stat b{font-size:20px}.weapon{border:1px solid var(--line);background:#14171d;border-radius:11px;padding:12px;margin:8px 0}.weaponHead{display:flex;justify-content:space-between;gap:10px;align-items:center}.tags{color:var(--muted);font-size:12px;margin-top:4px}@media(max-width:760px){.profileGrid{grid-template-columns:repeat(2,1fr)}}
-</style>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#101216">
-<link rel="apple-touch-icon" href="icon-192.png">
-</head>
-<body>
-<header>
-<h1>⚔️ KT Companion</h1>
-<p>Prototipo de calculadora para Kill Team · funciona íntegramente en este navegador</p>
-</header>
-<nav>
-<button class="tab active" data-page="calc">Calculadora</button>
-<button class="tab" data-page="compare">Comparador</button>
-<button class="tab" data-page="teams">Ejércitos</button>
-<button class="tab" data-page="rules">Reglas rápidas</button>
-</nav>
-<main>
-
-<section id="calc" class="page active">
-<div class="grid">
-<div class="card">
-<h2>Atacante</h2>
-<div class="row">
-<div><label>Ataques</label><input id="a" type="number" min="1" max="8" value="4"></div>
-<div><label>Impacta con</label><select id="hit"><option>2</option><option selected>3</option><option>4</option><option>5</option></select></div>
-</div>
-<div class="row">
-<div><label>Daño normal</label><input id="dmg" type="number" min="1" value="3"></div>
-<div><label>Daño crítico</label><input id="critdmg" type="number" min="1" value="4"></div>
-</div>
-<div class="row">
-<div><label>Crítico con</label><select id="crit"><option selected>6</option></select></div>
-<div><label>Rerolls (dados)</label><input id="reroll" type="number" min="0" max="8" value="0"></div>
-</div>
-</div>
-
-<div class="card">
-<h2>Defensor</h2>
-<div class="row">
-<div><label>Dados de defensa</label><input id="def" type="number" min="1" max="6" value="3"></div>
-<div><label>Salva con</label><select id="save"><option>2</option><option>3</option><option selected>4</option><option>5</option></select></div>
-</div>
-<div class="row">
-<div><label>Heridas</label><input id="hp" type="number" min="1" value="8"></div>
-<div><label>Penetración</label><select id="pierce"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option></select></div>
-</div>
-<div class="row">
-<div><label>Salvación crítica (6)</label><select id="critSave"><option selected>1</option><option value="0">0</option></select></div>
-<div><label>Cobertura</label><select id="cover"><option value="0" selected>No</option><option value="1">Sí</option></select></div>
-</div>
-</div>
-</div>
-<div class="card" style="margin-top:14px">
-<h2>Resultado</h2>
-<div class="result">
-<div class="metric">Daño medio<b id="avg">—</b></div>
-<div class="metric">Prob. de hacer daño<b id="hitprob">—</b></div>
-<div class="metric">Prob. de matar<b id="killprob">—</b></div>
-</div>
-<div style="margin-top:14px">
-<div class="muted">Probabilidad de infligir al menos X daño</div>
-<div id="thresholds"></div>
-</div>
-<div class="actions"><button class="btn primary" onclick="calculate()">Calcular</button><button class="btn" onclick="resetCalc()">Restablecer</button></div>
-<div class="notice">Motor de demostración: reproduce un modelo de dados tipo Kill Team y permite experimentar con perfiles personalizados. No sustituye las reglas oficiales.</div>
-</div>
-</section>
-
-<section id="compare" class="page">
-<div class="card">
-<h2>Comparador de armas</h2>
-<p class="muted">Añade configuraciones y compara daño medio y probabilidad de matar contra el objetivo definido.</p>
-<div id="weaponList"></div>
-<div class="actions"><button class="btn primary" onclick="addWeapon()">+ Añadir configuración</button></div>
-<table style="margin-top:15px"><thead><tr><th>Configuración</th><th>Daño medio</th><th>Hacer daño</th><th>Matar</th></tr></thead><tbody id="compareBody"></tbody></table>
-</div>
-</section>
-
-<section id="teams" class="page">
-<div class="card">
-<h2>Perfiles por ejército</h2>
-<p class="muted">Primera prueba: <b>Angels of Death</b>. Selecciona un operativo y después un arma para enviarla directamente a la calculadora.</p>
-<div class="row">
-<div><label>Ejército</label><select id="armySelect" onchange="renderArmy()"><option value="aod">Angels of Death</option></select></div>
-<div><label>Operativo</label><select id="operativeSelect" onchange="renderOperative()"></select></div>
-</div>
-<div id="operativeCard"></div>
-</div>
-</section>
-
-<section id="rules" class="page">
-<div class="card">
-<h2>Reglas rápidas</h2>
-<p><b>1. Tirada de ataque</b><br>Se lanzan los dados de ataque y cada resultado que alcanza el valor de impacto genera un éxito. Los resultados de 6 se tratan como críticos en este prototipo.</p>
-<p><b>2. Defensa</b><br>El defensor lanza sus dados de defensa. Los éxitos de defensa cancelan éxitos de ataque siguiendo una prioridad crítica → normal.</p>
-<p><b>3. Penetración</b><br>La penetración reduce el número de dados de defensa disponibles.</p>
-<p><b>4. Daño</b><br>Los impactos no bloqueados aplican su daño. Los críticos aplican el daño crítico configurado.</p>
-<p><b>5. Cobertura</b><br>En este prototipo, la cobertura añade un dado de defensa. En una versión final se implementarán las condiciones exactas de cada regla.</p>
-<div class="notice">Contenido deliberadamente resumido y genérico. Para una versión publicable habría que incorporar únicamente reglas y datos que tengamos derecho a distribuir.</div>
-</div>
-</section>
-</main>
-
-<script>
-const $=id=>document.getElementById(id);
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
- document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');
- document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(b.dataset.page).classList.add('active');
- if(b.dataset.page==='compare') renderCompare();
-});
-
-function pmfRolls(n,hit){
- let d=[1]; // counts of outcomes 0 miss, 1 normal, 2 crit
- for(let i=0;i<n;i++){let nd=Array(d.length+2).fill(0); for(let s=0;s<d.length;s++){nd[s]+=d[s]*(hit-1)/6; nd[s+1]+=d[s]*(6-hit)/6; nd[s+2]+=d[s]/6;} d=nd;}
- return d;
-}
-// exact-ish distribution using dynamic states [normal,crit]
-function attackDist(n,hit,rerolls){
- let states=new Map([['0,0',1]]);
- for(let i=0;i<n;i++){
-  let next=new Map();
-  for(const [key,p] of states){const [nn,cc]=key.split(',').map(Number);
-   // first roll
-   for(let r=1;r<=6;r++){
-    let rr=r; // simple reroll model: reroll misses while budget remains handled below by state expansion
-    let val=rr>=hit ? (rr===6?[0,1]:[1,0]) : [0,0];
-    let k=(nn+val[0])+','+(cc+val[1]); next.set(k,(next.get(k)||0)+p/6);
-   }
-  }
-  states=next;
- }
- return states;
-}
-// Monte Carlo is not used; enumerate attack/defense result distributions.
-function outcomeStats(cfg){
- let {a,hit,dmg,critdmg,def,save,hp,pierce,cover}=cfg;
- let defN=Math.max(0,def-pierce)+(cover?1:0);
- let A=attackDist(a,hit,0);
- // Defense outcomes: normal saves and crit saves, where 6 is crit.
- let D=new Map([['0,0',1]]);
- for(let i=0;i<defN;i++){let nd=new Map();for(const [k,p] of D){for(let r=1;r<=6;r++){let ns=r>=save?1:0, cs=r===6?1:0;if(r===6)ns=0;let [n,c]=k.split(',').map(Number);let nk=(n+ns)+','+(c+cs);nd.set(nk,(nd.get(nk)||0)+p/6)}}D=nd;}
- let total=0,kill=0,damSum=0,distDamage=new Map();
- for(const [ak,ap] of A){let [an,ac]=ak.split(',').map(Number);
-  for(const [dk,dp] of D){let [dn,dc]=dk.split(',').map(Number);
-   let nc=Math.max(0,ac-dc); let remC=dc-ac;
-   let nn=Math.max(0,an-Math.max(0,dn-remC));
-   let damage=nc*critdmg+nn*dmg; let p=ap*dp; total+=p;damSum+=damage*p;
-   distDamage.set(damage,(distDamage.get(damage)||0)+p); if(damage>=hp)kill+=p;
-  }
- }
- let nonzero=1-(distDamage.get(0)||0);
- let atLeast=x=>{let s=0;for(const [d,p] of distDamage)if(Number(d)>=x)s+=p;return s};
- return {avg:damSum,nonzero,kill,atLeast};
-}
-function cfg(){return{a:+$('a').value,hit:+$('hit').value,dmg:+$('dmg').value,critdmg:+$('critdmg').value,def:+$('def').value,save:+$('save').value,hp:+$('hp').value,pierce:+$('pierce').value,cover:+$('cover').value}}
-function pct(x){return (x*100).toFixed(1)+'%'}
-const armies={aod:{name:"Angels of Death",operatives:[
-{name:"Space Marine Captain",a:3,m:'6"',s:'3+',w:15,weapons:[
-["Plasma Pistol — Standard",4,3,3,5,"Prc1"],["Plasma Pistol — Supercharge",4,3,4,5,"Hot · Lethal 5+ · Prc1"],["Power Fist",5,3,5,7,"Brutal"]]},
-{name:"Assault Intercessor Sergeant",a:3,m:'6"',s:'3+',w:15,weapons:[
-["Hand Flamer",4,2,3,3,"Sat · Tor 1""],["Heavy Bolt Pistol",4,3,3,4,"PrcCrit1"],["Plasma Pistol — Standard",4,3,3,5,"Prc1"],["Plasma Pistol — Supercharge",4,3,4,5,"Hot · Lethal 5+ · Prc1"],["Chainsword",5,3,4,5,""],["Power Fist",5,4,5,7,"Brutal"],["Power Weapon",5,3,4,6,"Lethal 5+"],["Thunder Hammer",5,4,5,6,"Shock · Stun"]]},
-{name:"Intercessor Sergeant",a:3,m:'6"',s:'3+',w:15,weapons:[
-["Auto Bolt Rifle",4,3,3,4,'Tor 1"'],["Bolt Rifle",4,3,3,4,"PrcCrit1"],["Stalker Bolt Rifle",4,3,3,5,"Heavy · Lethal 5+ · PrcCrit1"],["Chainsword",4,3,4,5,""],["Fists",4,3,3,4,""],["Power Fist",4,4,5,7,"Brutal"],["Power Weapon",4,3,4,6,"Lethal 5+"],["Thunder Hammer",4,4,5,6,"Shock · Stun"]]},
-{name:"Eliminator Sniper",a:3,m:'7"',s:'3+',w:12,weapons:[
-["Bolt Pistol",4,3,3,4,'Rng 8"'],["Bolt Sniper Rifle — Executioner",4,2,3,4,"Heavy(Dash) · Sat · Seek Light · Silent"],["Bolt Sniper Rifle — Hyperfrag",4,2,2,4,'Blast 1" · Heavy(Dash) · Silent'],["Bolt Sniper Rifle — Mortis",4,2,3,3,"Dev3 · Heavy(Dash) · Prc1 · Silent"],["Fists",4,3,3,4,""]]},
-{name:"Assault Intercessor Grenadier",a:3,m:'6"',s:'3+',w:14,weapons:[
-["Heavy Bolt Pistol",4,3,3,4,"PrcCrit1"],["Chainsword",5,3,4,5,""],["Frag Grenade",4,3,2,4,'Blast 2" · Sat'],["Krak Grenade",4,3,4,5,"Prc1 · Sat"]]},
-{name:"Assault Intercessor Warrior",a:3,m:'6"',s:'3+',w:14,weapons:[
-["Heavy Bolt Pistol",4,3,3,4,"PrcCrit1"],["Chainsword",5,3,4,5,""]]},
-{name:"Heavy Intercessor Gunner",a:3,m:'5"',s:'3+',w:18,weapons:[
-["Bolt Pistol",4,3,3,4,'Rng 8"'],["Heavy Bolter — Focused",5,3,4,5,"PrcCrit1"],["Heavy Bolter — Sweeping",4,3,4,5,'PrcCrit1 · Tor 1"'],["Fists",4,3,3,4,""]]},
-{name:"Intercessor Gunner",a:3,m:'6"',s:'3+',w:14,weapons:[
-["Auto Bolt Rifle",4,3,3,4,'Tor 1"'],["Auxiliary Grenade Launcher — Frag",4,3,2,4,'Blast 2"'],["Auxiliary Grenade Launcher — Krak",4,3,4,5,"Prc1"],["Bolt Rifle",4,3,3,4,"PrcCrit1"],["Stalker Bolt Rifle",4,3,3,5,"Heavy · Lethal 5+ · PrcCrit1"],["Mobile",4,3,3,4,""],["Fists",4,3,3,4,""]]},
-{name:"Intercessor Warrior",a:3,m:'6"',s:'3+',w:14,weapons:[
-["Auto Bolt Rifle",4,3,3,4,'Tor 1"'],["Bolt Rifle",4,3,3,4,"PrcCrit1"],["Stalker Bolt Rifle",4,3,3,5,"Heavy · Lethal 5+ · PrcCrit1"],["Mobile",4,3,3,4,""],["Fists",4,3,3,4,""]]}
-]}};
-function renderArmy(){const a=armies[$('armySelect').value];$('operativeSelect').innerHTML=a.operatives.map((o,i)=>`<option value="${i}">${o.name}</option>`).join('');renderOperative()}
-function renderOperative(){const a=armies[$('armySelect').value],o=a.operatives[+$('operativeSelect').value];$('operativeCard').innerHTML=`<h3>${o.name}</h3><div class="profileGrid"><div class="stat"><small>ATAQUES</small><b>${o.a}</b></div><div class="stat"><small>MOVIMIENTO</small><b>${o.m}</b></div><div class="stat"><small>SALVACIÓN</small><b>${o.s}</b></div><div class="stat"><small>HERIDAS</small><b>${o.w}</b></div></div><h3 style="margin-top:16px">Armas</h3>${o.weapons.map((x,i)=>`<div class="weapon"><div class="weaponHead"><b>${x[0]}</b><button class="btn primary" onclick="useWeapon(${+$('operativeSelect').value},${i})">Usar en calculadora</button></div><div class="tags">${x[1]} ataques · ${x[2]}+ · ${x[3]}/${x[4]} daño ${x[5]?'· '+x[5]:''}</div></div>`).join('')}`}
-function useWeapon(oi,wi){const o=armies[$('armySelect').value].operatives[oi],w=o.weapons[wi];$('a').value=w[1];$('hit').value=w[2];$('dmg').value=w[3];$('critdmg').value=w[4];document.querySelector('[data-page="calc"]').click();calculate()}
-renderArmy();
-
-function calculate(){
- let r=outcomeStats(cfg());$('avg').textContent=r.avg.toFixed(2);$('hitprob').textContent=pct(r.nonzero);$('killprob').textContent=pct(r.kill);
- let hp=+$('hp').value, xs=[1,Math.ceil(hp/3),Math.ceil(hp/2),hp];
- $('thresholds').innerHTML=xs.filter((x,i,a)=>a.indexOf(x)===i).map(x=>`<div style="margin:9px 0"><div>${x}+ daño · <b>${pct(r.atLeast(x))}</b></div><div class="bar"><i style="width:${r.atLeast(x)*100}%"></i></div></div>`).join('');
-}
-function resetCalc(){['a','dmg','critdmg','def','hp','reroll'].forEach((x,i)=>$(x).value=[4,3,4,3,8,0][i]);$('hit').value=3;$('save').value=4;$('pierce').value=0;$('cover').value=0;calculate()}
-function loadPreset(a,h,d,c){$('a').value=a;$('hit').value=h;$('dmg').value=d;$('critdmg').value=c;document.querySelector('[data-page="calc"]').click();calculate()}
-let weapons=[{name:'Configuración 1',a:4,hit:3,dmg:3,critdmg:4},{name:'Configuración 2',a:5,hit:4,dmg:2,critdmg:5}];
-function addWeapon(){weapons.push({name:'Configuración '+(weapons.length+1),a:4,hit:3,dmg:3,critdmg:4});renderCompare()}
-function renderCompare(){
- $('weaponList').innerHTML=weapons.map((w,i)=>`<div class="row" style="align-items:end"><div><label>Nombre</label><input value="${w.name}" oninput="weapons[${i}].name=this.value"></div><div><label>Ataques / Impacto / Daño / Crítico</label><input value="${w.a}/${w.hit}/${w.dmg}/${w.critdmg}" onchange="let v=this.value.split('/').map(Number);if(v.length===4)Object.assign(weapons[${i}],{a:v[0],hit:v[1],dmg:v[2],critdmg:v[3]});renderCompare()"></div></div>`).join('');
- let base=cfg();$('compareBody').innerHTML=weapons.map(w=>{let r=outcomeStats({...base,...w});return `<tr><td><b>${w.name}</b></td><td>${r.avg.toFixed(2)}</td><td>${pct(r.nonzero)}</td><td>${pct(r.kill)}</td></tr>`}).join('');
-}
-calculate();renderCompare();
-</script>
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
-}
-</script>
-</body>
-</html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101216"><link rel="manifest" href="manifest.json"><title>KT Companion v0.0.3</title><style>
+:root{--bg:#0f1115;--p:#191c23;--p2:#242934;--txt:#f5f6f8;--mut:#aeb5c2;--acc:#e8b04b;--line:#343a48}*{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#0c0e12,#171a20);color:var(--txt);font:15px system-ui,sans-serif}header,main,nav{max-width:1050px;margin:auto}header{padding:20px 16px 8px}h1{margin:0}header p{color:var(--mut);margin:5px 0}nav{display:flex;gap:7px;padding:8px 16px;position:sticky;top:0;background:#101216ee;z-index:3;overflow:auto}button,.btn,select,input{font:inherit}button,.btn{border:1px solid var(--line);background:var(--p);color:var(--txt);padding:10px 13px;border-radius:10px;cursor:pointer}button.active,.primary{background:var(--acc);color:#17120a;border-color:var(--acc);font-weight:700}.page{display:none}.page.active{display:block}main{padding:0 16px 40px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.card{background:var(--p);border:1px solid var(--line);border-radius:15px;padding:16px;margin-top:14px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}label{display:block;color:var(--mut);font-size:12px;margin-bottom:5px}select,input{width:100%;padding:10px;border-radius:9px;border:1px solid var(--line);background:#101217;color:var(--txt)}.results{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.metric{background:var(--p2);border-radius:11px;padding:12px}.metric b{display:block;font-size:22px;margin-top:3px}.muted{color:var(--mut)}.bar{height:8px;background:#343944;border-radius:9px;overflow:hidden;margin:5px 0 10px}.bar i{display:block;height:100%;background:var(--acc)}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.stat{background:var(--p2);padding:10px;border-radius:10px;text-align:center}.stat small{display:block;color:var(--mut);font-size:11px}.stat b{font-size:19px}.weapon{border:1px solid var(--line);border-radius:11px;padding:11px;margin:8px 0;background:#14171c}.weaponline{display:flex;justify-content:space-between;gap:8px;align-items:center}.tag{color:var(--mut);font-size:12px;margin-top:4px}.notice{border-left:3px solid var(--acc);background:#211d14;padding:10px;border-radius:8px;margin-top:12px}.version{font-size:11px;color:var(--mut)}table{width:100%;border-collapse:collapse;margin-top:12px}td,th{text-align:left;padding:9px;border-bottom:1px solid var(--line)}th{color:var(--mut);font-size:12px}@media(max-width:700px){.grid,.row{grid-template-columns:1fr}.results{grid-template-columns:1fr 1fr}.stats{grid-template-columns:repeat(2,1fr)}.weaponline{align-items:flex-start;flex-direction:column}}
+</style></head><body><header><h1>⚔️ KT Companion</h1><p>Calculadora y perfiles de Kill Team</p><span class="version">v0.0.3 · perfiles por ejército</span></header><nav><button class="tab active" data-p="calc">Calculadora</button><button class="tab" data-p="compare">Comparador</button><button class="tab" data-p="teams">Ejércitos</button><button class="tab" data-p="rules">Reglas</button></nav><main>
+<section id="calc" class="page active"><div class="grid"><div class="card"><h2>Atacante</h2><div class="row"><div><label>Ataques</label><input id="a" type="number" value="4" min="1"></div><div><label>Impacta con</label><select id="hit"><option>2</option><option selected>3</option><option>4</option><option>5</option></select></div></div><div class="row"><div><label>Daño normal</label><input id="dmg" type="number" value="3" min="1"></div><div><label>Daño crítico</label><input id="cdmg" type="number" value="4" min="1"></div></div></div><div class="card"><h2>Defensor</h2><div class="row"><div><label>Dados defensa</label><input id="def" type="number" value="3" min="0"></div><div><label>Salvación</label><select id="save"><option>2</option><option>3</option><option selected>4</option><option>5</option></select></div></div><div class="row"><div><label>Heridas</label><input id="hp" type="number" value="8" min="1"></div><div><label>Penetración</label><select id="pierce"><option selected>0</option><option>1</option><option>2</option></select></div></div></div></div><div class="card"><h2>Resultado</h2><div class="results"><div class="metric">Daño medio<b id="avg">—</b></div><div class="metric">Hacer daño<b id="hitp">—</b></div><div class="metric">Matar<b id="kill">—</b></div></div><div id="bars" style="margin-top:14px"></div><button class="primary" onclick="calc()">Calcular</button></div></section>
+<section id="compare" class="page"><div class="card"><h2>Comparador</h2><p class="muted">Compara configuraciones contra el objetivo actual.</p><div id="cmp"></div><button class="primary" onclick="addCmp()">+ Añadir arma</button><table><thead><tr><th>Arma</th><th>Daño</th><th>Daño &gt;0</th><th>Matar</th></tr></thead><tbody id="ct"></tbody></table></div></section>
+<section id="teams" class="page"><div class="card"><h2>Perfiles por ejército</h2><div class="row"><div><label>Ejército</label><select id="army" onchange="renderOps()"><option value="aod">Angels of Death</option></select></div><div><label>Operativo</label><select id="op" onchange="renderOp()"></select></div></div><div id="opcard"></div></div></section>
+<section id="rules" class="page"><div class="card"><h2>Reglas rápidas</h2><p><b>Disparo:</b> configura ataques, impacto, daño, defensa, salvación, penetración y heridas para estimar resultados.</p><p><b>Críticos:</b> en este prototipo un 6 de ataque es crítico.</p><p><b>Perfiles:</b> selecciona ejército → operativo → arma. El botón de cada arma carga sus valores en la calculadora.</p><div class="notice">Prototipo de prueba. Los datos y reglas deben revisarse antes de usar la aplicación como referencia de juego.</div></div></section>
+</main><script>
+const $=x=>document.getElementById(x);document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$(b.dataset.p).classList.add('active');if(b.dataset.p==='compare')renderCmp()});
+const teams={aod:[
+['Space Marine Captain',15,'6"','3+',[['Plasma Pistol — Standard',4,3,3,5,'Prc1'],['Plasma Pistol — Supercharge',4,3,4,5,'Hot · Lethal 5+ · Prc1'],['Power Fist',5,3,5,7,'Brutal']]],
+['Assault Intercessor Sergeant',15,'6"','3+',[['Heavy Bolt Pistol',4,3,3,4,'PrcCrit1'],['Plasma Pistol — Standard',4,3,3,5,'Prc1'],['Plasma Pistol — Supercharge',4,3,4,5,'Hot · Lethal 5+ · Prc1'],['Chainsword',5,3,4,5,''],['Power Fist',5,4,5,7,'Brutal'],['Power Weapon',5,3,4,6,'Lethal 5+'],['Thunder Hammer',5,4,5,6,'Shock · Stun']]],
+['Intercessor Sergeant',15,'6"','3+',[['Auto Bolt Rifle',4,3,3,4,'Tor 1"'],['Bolt Rifle',4,3,3,4,'PrcCrit1'],['Stalker Bolt Rifle',4,3,3,5,'Heavy · Lethal 5+ · PrcCrit1'],['Chainsword',4,3,4,5,''],['Fists',4,3,3,4,''],['Power Fist',4,4,5,7,'Brutal'],['Power Weapon',4,3,4,6,'Lethal 5+'],['Thunder Hammer',4,4,5,6,'Shock · Stun']]],
+['Eliminator Sniper',12,'7"','3+',[['Bolt Pistol',4,3,3,4,'Rng 8"'],['Bolt Sniper Rifle — Executioner',4,2,3,4,'Heavy · Silent'],['Bolt Sniper Rifle — Hyperfrag',4,2,2,4,'Blast 1" · Heavy · Silent'],['Bolt Sniper Rifle — Mortis',4,2,3,3,'Dev3 · Heavy · Prc1 · Silent'],['Fists',4,3,3,4,'']]],
+['Assault Intercessor Grenadier',14,'6"','3+',[['Heavy Bolt Pistol',4,3,3,4,'PrcCrit1'],['Chainsword',5,3,4,5,''],['Frag Grenade',4,3,2,4,'Blast 2" · Sat'],['Krak Grenade',4,3,4,5,'Prc1 · Sat']]],
+['Assault Intercessor Warrior',14,'6"','3+',[['Heavy Bolt Pistol',4,3,3,4,'PrcCrit1'],['Chainsword',5,3,4,5,'']]],
+['Heavy Intercessor Gunner',18,'5"','3+',[['Bolt Pistol',4,3,3,4,'Rng 8"'],['Heavy Bolter — Focused',5,3,4,5,'PrcCrit1'],['Heavy Bolter — Sweeping',4,3,4,5,'PrcCrit1 · Tor 1"'],['Fists',4,3,3,4,'']]],
+['Intercessor Gunner',14,'6"','3+',[['Auto Bolt Rifle',4,3,3,4,'Tor 1"'],['Auxiliary Grenade Launcher — Frag',4,3,2,4,'Blast 2"'],['Auxiliary Grenade Launcher — Krak',4,3,4,5,'Prc1'],['Bolt Rifle',4,3,3,4,'PrcCrit1'],['Stalker Bolt Rifle',4,3,3,5,'Heavy · Lethal 5+ · PrcCrit1'],['Fists',4,3,3,4,'']]],
+['Intercessor Warrior',14,'6"','3+',[['Auto Bolt Rifle',4,3,3,4,'Tor 1"'],['Bolt Rifle',4,3,3,4,'PrcCrit1'],['Stalker Bolt Rifle',4,3,3,5,'Heavy · Lethal 5+ · PrcCrit1'],['Fists',4,3,3,4,'']]]
+]};
+function dist(n,t){let d=new Map([['0,0',1]]);for(let i=0;i<n;i++){let z=new Map;for(let[k,p]of d){let[a,c]=k.split(',').map(Number);for(let r=1;r<=6;r++){let nn=a+(r>=t&&r<6),cc=c+(r===6),q=nn+','+cc;z.set(q,(z.get(q)||0)+p/6)}}d=z}return d}
+function outcome(c){let A=dist(c.a,c.hit),dn=Math.max(0,c.def-c.pierce),D=distDef(dn,c.save),m=new Map,avg=0,kill=0;for(let[ak,ap]of A){let[an,ac]=ak.split(',').map(Number);for(let[dk,dp]of D){let[sn,sc]=dk.split(',').map(Number),cr=Math.max(0,ac-sc),no=Math.max(0,an-Math.max(0,sn-(sc-ac))),x=cr*c.cdmg+no*c.dmg,p=ap*dp;avg+=x*p;m.set(x,(m.get(x)||0)+p);if(x>=c.hp)kill+=p}}let nz=1-(m.get(0)||0);return{avg,nz,kill,at:x=>[...m].reduce((s,[d,p])=>s+(d>=x?p:0),0)}}
+function distDef(n,t){let d=new Map([['0,0',1]]);for(let i=0;i<n;i++){let z=new Map;for(let[k,p]of d){let[a,c]=k.split(',').map(Number);for(let r=1;r<=6;r++){let sn=r>=t&&r<6,sc=r===6,q=(a+sn)+','+(c+sc);z.set(q,(z.get(q)||0)+p/6)}}d=z}return d}
+function cfg(){return{a:+$('a').value,hit:+$('hit').value,dmg:+$('dmg').value,cdmg:+$('cdmg').value,def:+$('def').value,save:+$('save').value,hp:+$('hp').value,pierce:+$('pierce').value}}
+function pct(x){return (x*100).toFixed(1)+'%'}function calc(){let r=outcome(cfg());$('avg').textContent=r.avg.toFixed(2);$('hitp').textContent=pct(r.nz);$('kill').textContent=pct(r.kill);$('bars').innerHTML=[1,Math.ceil(cfg().hp/2),cfg().hp].map(x=>`<div>${x}+ daño: <b>${pct(r.at(x))}</b><div class="bar"><i style="width:${r.at(x)*100}%"></i></div></div>`).join('')}
+function renderOps(){$('op').innerHTML=teams[$('army').value].map((o,i)=>`<option value="${i}">${o[0]}</option>`).join('');renderOp()}function renderOp(){let o=teams[$('army').value][+$('op').value];$('opcard').innerHTML=`<h2>${o[0]}</h2><div class="stats"><div class="stat"><small>HERIDAS</small><b>${o[1]}</b></div><div class="stat"><small>MOVIMIENTO</small><b>${o[2]}</b></div><div class="stat"><small>SALVACIÓN</small><b>${o[3]}</b></div><div class="stat"><small>ARMAS</small><b>${o[4].length}</b></div></div><h3 style="margin-top:15px">Armas</h3>`+o[4].map((w,i)=>`<div class="weapon"><div class="weaponline"><b>${w[0]}</b><button class="primary" onclick="useW(${i})">Usar en calculadora</button></div><div class="tag">${w[1]} ataques · ${w[2]}+ · ${w[3]}/${w[4]} daño ${w[5]?'· '+w[5]:''}</div></div>`).join('')}function useW(i){let w=teams.aod[+$('op').value][4][i];$('a').value=w[1];$('hit').value=w[2];$('dmg').value=w[3];$('cdmg').value=w[4];document.querySelector('[data-p=calc]').click();calc()}
+let comps=[['Bolt Rifle',4,3,3,4],['Plasma',4,3,4,5]];function addCmp(){comps.push(['Nueva',4,3,3,4]);renderCmp()}function renderCmp(){$('cmp').innerHTML=comps.map((w,i)=>`<div class="row"><input value="${w[0]}" oninput="comps[${i}][0]=this.value"><input value="${w.slice(1).join('/')}" onchange="let v=this.value.split('/').map(Number);if(v.length===4)comps[${i}].splice(1,4,...v);renderCmp()"></div>`).join('');let base=cfg();$('ct').innerHTML=comps.map(w=>{let r=outcome({...base,a:w[1],hit:w[2],dmg:w[3],cdmg:w[4]});return`<tr><td>${w[0]}</td><td>${r.avg.toFixed(2)}</td><td>${pct(r.nz)}</td><td>${pct(r.kill)}</td></tr>`}).join('')}
+renderOps();calc();renderCmp();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
+</script></body></html>
