@@ -1,10 +1,16 @@
-const CACHE="kt-companion-v5";
-const ASSETS=["./","./index.html","./manifest.json","./icon-192.png","./icon-512.png"];
+const CACHE="kt-companion-v6";
+const ASSETS=["./","./index.html","./manifest.json","./icon-192.png","./icon-512.png","./blades.js"];
 self.addEventListener("install",e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)))});
-self.addEventListener("activate",e=>e.waitUntil(self.clients.claim()));
+self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener("fetch",e=>{
  if(e.request.mode==="navigate"){
-  e.respondWith(fetch(e.request).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put("./index.html",copy));return r}).catch(()=>caches.match("./index.html")));
+  e.respondWith(fetch(e.request).then(async r=>{
+   const text=await r.text();
+   const injected=text.replace(/<\/body>/i,'<script src="./blades.js?v=1"></script></body>');
+   const response=new Response(injected,{status:r.status,statusText:r.statusText,headers:r.headers});
+   caches.open(CACHE).then(c=>c.put("./index.html",response.clone()));
+   return response;
+  }).catch(()=>caches.match("./index.html")));
  }else{
   e.respondWith(fetch(e.request).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return r}).catch(()=>caches.match(e.request)));
  }
