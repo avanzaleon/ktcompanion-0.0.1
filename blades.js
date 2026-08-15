@@ -1,19 +1,37 @@
-// Blades of Khaine data for KT Companion.
-// Profiles verified against KTDash reference: https://ktdash.app/killteams/AEL-BOK
+// Kill Team profile data for KT Companion.
+// Blades of Khaine and Canoptek Circle profiles verified against KTDash references.
 (function(){
   const bok=[
     ['Dire Avenger Exarch',9,'7"','3+',[['Shuriken Catapult',4,3,3,4,'Rnd'],['Shuriken Pistol',4,3,3,4,'Rng 8" · Rnd'],['Twin Shuriken Catapult',4,3,3,4,'Ceaseless · Rnd'],['Diresword',5,3,4,5,'Lethal 5+ · Rnd'],['Fists',4,3,2,4,''],['Gun Butts',3,4,2,3,''],['Power Weapon',5,3,4,6,'Lethal 5+']]],
-    ['Howling Banshee Exarch',9,'7"','3+',[['Shuriken Pistol',4,3,3,4,'Rng 8" · Rnd'],['Triskele',4,3,2,3,'Rng 8" · Torrent 2" · Rnd'],['Executioner',5,3,3,7,'Lethal 5+'],['Mirrorswords',5,3,4,6,'Lethal 5+ · Ceaseless'],['Power Weapon',5,3,4,6,'Lethal 5+'],['Triskele',5,3,4,5,'Rnd']]],
+    ['Howling Banshee Exarch',9,'7"','3+',[['Shuriken Pistol',4,3,3,4,'Rng 8" · Rnd'],['Triskele — Shoot',4,3,2,3,'Rng 8" · Torrent 2" · Rnd'],['Executioner',5,3,3,7,'Lethal 5+'],['Mirrorswords',5,3,4,6,'Lethal 5+ · Ceaseless'],['Power Weapon',5,3,4,6,'Lethal 5+'],['Triskele — Fight',5,3,4,5,'Rnd']]],
     ['Striking Scorpion Exarch',9,'7"','3+',[['Shuriken Pistol',4,3,3,4,'Rng 8" · Rnd'],['Twin Shuriken Pistols',4,4,3,4,'Rng 8" · Ceaseless · Rnd'],['Biting Blade',5,3,5,6,'Rnd'],['Twin Chainswords',5,3,4,5,'Ceaseless · Rnd'],["Scorpion's Claw and Chainsword",5,3,4,6,'Brutal · Lethal 5+']]],
     ['Dire Avenger Warrior',8,'7"','4+',[['Shuriken Catapult',4,3,3,4,'Rnd'],['Fists',4,3,2,4,'']]],
     ['Howling Banshee Warrior',8,'7"','4+',[['Shuriken Pistol',4,3,3,4,'Rng 8" · Rnd'],['Power Weapon',4,3,4,6,'Lethal 5+']]],
     ['Striking Scorpion Warrior',8,'7"','3+',[['Shuriken Pistol',4,3,3,4,'Rng 8" · Rnd'],['Chainsword',4,3,4,5,'Rnd']]]
   ];
+
+  const can=[
+    ['Canoptek Geomancer',14,'6"','3+',[['Tremorglaive — Part Matter',4,3,4,5,'Prc1 · PrcCrit2'],['Tremorglaive — Quake',5,3,1,2,'Blast 2" · Seek Light · Stun'],['Tremorglaive — Melee',4,4,4,5,'Sev · Shock · Stun']]],
+    ['Canoptek Macrocyte Accelerator',7,'7"','4+',[['Spark',4,4,2,3,'Rng 4" · Prc1'],['Claws & Spark',3,4,3,4,'Lethal 5+ · Stun']]],
+    ['Canoptek Macrocyte Reanimator',7,'7"','4+',[['Atomiser Beam',4,4,3,4,'Rng 6" · Lethal 5+'],['Claws & Tail',4,4,3,4,'']]],
+    ['Canoptek Macrocyte Warrior — Gauss',7,'7"','4+',[['Gauss Scalpel',4,4,2,3,'Prc1'],['Claws & Tail',3,4,3,4,'']]],
+    ['Canoptek Macrocyte Warrior — Tesla',7,'7"','4+',[['Tesla Caster — Focused',4,4,2,3,''],['Tesla Caster — Living Lightning',4,4,2,3,'Blast 2"'],['Claws & Tail',3,4,3,4,'']]],
+    ['Canoptek Tomb Crawler — Twin Gauss Reapers',18,'5"','3+',[['Twin Gauss Reapers — Focused',5,4,4,5,'Prc1 · Sev'],['Twin Gauss Reapers — Sweeping',4,4,4,5,'Prc1 · Sev · Torrent 1"'],['Claws',4,4,4,4,'']]],
+    ['Canoptek Tomb Crawler — Transdimensional Isolator',18,'5"','3+',[['Transdimensional Isolator',5,4,5,6,'Dimensional Banishment'],['Claws',4,4,4,4,'']]]
+  ];
+
   teams.bok=bok;
+  teams.can=can;
+
   const army=$('army');
-  if(army && !Array.from(army.options).some(o=>o.value==='bok')){
-    const o=document.createElement('option');o.value='bok';o.textContent='Blades of Khaine';army.appendChild(o);
+  function addArmy(value,label){
+    if(army && !Array.from(army.options).some(o=>o.value===value)){
+      const o=document.createElement('option');o.value=value;o.textContent=label;army.appendChild(o);
+    }
   }
+  addArmy('bok','Blades of Khaine');
+  addArmy('can','Canoptek Circle');
+
   function current(){return teams[$('army').value]||teams.aod}
   window.renderOps=function(){
     $('op').innerHTML=current().map((o,i)=>`<option value="${i}">${o[0]}</option>`).join('');
