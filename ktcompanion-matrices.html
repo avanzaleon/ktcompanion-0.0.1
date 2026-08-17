@@ -1,25 +1,30 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KT Companion 2.0 — Matrices</title><style>body{margin:0;background:#0b0f14;color:#edf2f6;font-family:system-ui}#loading{padding:40px;font-size:22px}.matrix{background:#151b22;border:1px solid #303b48;border-radius:14px;padding:16px;margin:12px 0}.row{display:flex;justify-content:space-between;gap:10px}.mut{color:#99a6b3;font-size:13px}button{font:inherit;padding:10px 14px;border-radius:9px;border:1px solid #303b48;background:#151b22;color:#edf2f6}.danger{background:#3b2020}.primary{background:#263b55}</style></head><body><div id="loading">Cargando KT Companion…</div><script>
-fetch("ktcompanion-v16-estable-armas.html",{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("No se pudo cargar la base");return r.text()}).then(html=>{
- const i=html.lastIndexOf("</body>"); const patch=`<script>
- (function(){
-  function esc(x){return String(x??"").replace(/[&<>\"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));}
-  window.showSaved=function(){
-   document.querySelectorAll(".page").forEach(e=>e.classList.remove("active"));
-   let p=document.getElementById("saved");
-   if(!p){p=document.createElement("section");p.id="saved";p.className="page active";p.innerHTML="<div class=matrix><h2>📚 Matrices guardadas</h2><div id=savedList></div><p><button onclick=location.reload()>➕ Crear nueva matriz</button></p></div>";document.querySelector("main").appendChild(p);}
-   p.classList.add("active");renderSaved();
-  };
-  window.renderSaved=function(){
-   const box=document.getElementById("savedList"),all=JSON.parse(localStorage.getItem("ktc2")||"[]");
-   if(!all.length){box.innerHTML="<p class=mut>No hay matrices guardadas.</p>";return;}
-   box.innerHTML=all.map(m=>"<div class=matrix data-id="+esc(m.id)+"><div class=row><div><b>"+esc(m.friend)+(m.enemy?" vs "+esc(m.enemy):" — sin rival")+"</b><div class=mut>"+esc(m.date)+"</div></div><button class=danger onclick=deleteMatrix("+esc(m.id)+")>🗑️ Borrar</button></div><p class=mut>🗺️ "+esc(m.map)+" · 🎯 "+esc(m.operation)+"</p><details><summary>Ver resumen del combate</summary><p><b>🟢 Amigo</b><br>Operativos: "+esc((m.friendOperatives||[]).map(o=>o.name+" ×"+(o.count||1)).join(", ")||"Ninguno")+"<br>Tácticas: "+esc((m.chapter?.friend||[]).join(", ")||"Ninguna")+"</p><p><b>🔴 Rival</b><br>Operativos: "+esc((m.enemyOperatives||[]).map(o=>o.name+" ×"+(o.count||1)).join(", ")||"Ninguno")+"<br>Tácticas: "+esc((m.chapter?.enemy||[]).join(", ")||"Ninguna")+"</p>"+[1,2,3,4].map(t=>"<p><b>T"+t+"</b><br>🟢 Estrategia: "+esc((m.turns?.friend?.[t]?.strategy||[]).join(", ")||"—")+" · Tiroteo: "+esc((m.turns?.friend?.[t]?.firefight||[]).join(", ")||"—")+" · Facción: "+esc((m.turns?.friend?.[t]?.faction||[]).join(", ")||"—")+" · Universal: "+esc((m.turns?.friend?.[t]?.universal||[]).join(", ")||"—")+"<br>🔴 Estrategia: "+esc((m.turns?.enemy?.[t]?.strategy||[]).join(", ")||"—")+" · Tiroteo: "+esc((m.turns?.enemy?.[t]?.firefight||[]).join(", ")||"—")+" · Facción: "+esc((m.turns?.enemy?.[t]?.faction||[]).join(", ")||"—")+" · Universal: "+esc((m.turns?.enemy?.[t]?.universal||[]).join(", ")||"—")+"</p>").join("")+"</details></div>").join("");
-  };
-  window.deleteMatrix=function(id){if(!confirm("¿Borrar esta matriz?"))return;let a=JSON.parse(localStorage.getItem("ktc2")||"[]").filter(m=>String(m.id)!==String(id));localStorage.setItem("ktc2",JSON.stringify(a));renderSaved();};
-  const nav=document.querySelector(".nav")||document.querySelector("main>div");
-  if(nav){const b=document.createElement("button");b.textContent="📚 Matrices guardadas";b.onclick=showSaved;nav.appendChild(b);}
-  const oldPage2=window.page;window.page=function(x){if(x==="saved"){showSaved();return}oldPage2(x);};
- })();
-<\/script>`;
- const patched=html.slice(0,i)+patch+html.slice(i);document.open();document.write(patched);document.close();
-}).catch(e=>{document.getElementById("loading").textContent="Error al cargar KT Companion";console.error(e)});
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KT Companion — Matrices</title>
+<style>
+body{margin:0;background:#0b0f14;color:#edf2f6;font:15px system-ui,sans-serif}
+#bar{position:sticky;top:0;z-index:10;padding:10px;background:#10151b;border-bottom:1px solid #303a45;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+button{font:inherit;padding:10px 14px;border-radius:9px;border:1px solid #303a45;background:#151b22;color:#edf2f6}
+.primary{background:#263b55;border-color:#6d9dcc}.danger{background:#3b2020}
+#app{width:100%;height:calc(100vh - 62px);border:0;display:block}
+#saved{display:none;padding:14px;max-width:1050px;margin:auto}
+.card{background:#151b22;border:1px solid #303a45;border-radius:14px;padding:15px;margin:12px 0}.mut{color:#99a6b3;font-size:13px}
+</style>
+</head>
+<body>
+<div id="bar"><button class="primary" id="saveBtn">💾 Guardar matriz</button><button id="savedBtn">📚 Matrices guardadas</button><button id="backBtn" style="display:none">← Volver a la matriz</button></div>
+<iframe id="app" src="ktcompanion-v16-estable-armas.html?v=100" title="KT Companion"></iframe>
+<section id="saved"><div class="card"><h2>📚 Matrices guardadas</h2><div class="mut">Las matrices guardadas se muestran como resumen y no se pueden editar.</div></div><div id="savedList"></div></section>
+<script>
+const app=document.getElementById('app'),saved=document.getElementById('saved'),list=document.getElementById('savedList');
+function cw(){return app.contentWindow}function cd(){return app.contentDocument}
+function snapshot(){const w=cw(),d=cd(),get=id=>d.getElementById(id),sel=id=>get(id)?.value||'';const cleanOps=side=>Object.entries(w.counts?.[side]||{}).filter(([,c])=>c>0).map(([name,count])=>({name,count}));const readChoices=id=>[...d.querySelectorAll('#'+id+' input:checked')].map(x=>x.parentElement.querySelector('span')?.textContent.trim()).filter(Boolean);const turns={friend:{},enemy:{}};for(const side of ['friend','enemy'])for(let t=1;t<=4;t++){const base=w.turns?.[side]?.[t];turns[side][t]=base?JSON.parse(JSON.stringify(base)):{strategy:[],firefight:[],faction:[],universal:[]}}const side=w.currentTurnSide||'friend',t=w.currentTurn||1;for(const id of ['strategy','firefight','faction','universal'])turns[side][t][id]=readChoices(id);return{id:Date.now(),date:new Date().toLocaleString('es-ES'),map:w.selectedMap||'',operation:w.selectedOperation||'',friend:sel('friend'),enemy:sel('enemy'),friendOperatives:cleanOps('friend'),enemyOperatives:cleanOps('enemy'),chapter:{friend:(w.chapterSelections?.friend||[]).slice(),enemy:(w.chapterSelections?.enemy||[]).slice()},turns}}
+function saveMatrix(){const m=snapshot();if(!m.friend){alert('Selecciona el ejército amigo antes de guardar.');return}const all=JSON.parse(localStorage.getItem('ktc2')||'[]');all.unshift(m);localStorage.setItem('ktc2',JSON.stringify(all));alert('Matriz guardada.')}
+function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function renderSaved(){const all=JSON.parse(localStorage.getItem('ktc2')||'[]');if(!all.length){list.innerHTML='<div class="card mut">No hay matrices guardadas.</div>';return}list.innerHTML=all.map(m=>{const ops=(m.friendOperatives||[]).map(o=>esc(o.name)+(o.count>1?' ×'+o.count:'')).join(', ')||'Ninguno';const eops=(m.enemyOperatives||[]).map(o=>esc(o.name)+(o.count>1?' ×'+o.count:'')).join(', ')||'Ninguno';const timeline=['friend','enemy'].map(side=>{const label=side==='friend'?'🟢 Amigo':'🔴 Rival';return '<h4>'+label+'</h4>'+[1,2,3,4].map(t=>{const x=m.turns?.[side]?.[t]||{};return '<div class="card"><b>T'+t+'</b><div class="mut">Estrategia: '+esc((x.strategy||[]).join(', ')||'—')+'</div><div class="mut">Tiroteo: '+esc((x.firefight||[]).join(', ')||'—')+'</div><div class="mut">Equipo de facción: '+esc((x.faction||[]).join(', ')||'—')+'</div><div class="mut">Equipo universal: '+esc((x.universal||[]).join(', ')||'—')+'</div></div>'}).join('')}).join('');return '<div class="card"><div style="display:flex;justify-content:space-between;gap:10px"><div><h3 style="margin:0">'+esc(m.friend)+(m.enemy?' vs '+esc(m.enemy):' — sin rival')+'</h3><div class="mut">'+esc(m.date)+'</div></div><button class="danger" onclick="delMatrix('+Number(m.id)+')">🗑️ Borrar</button></div><div class="mut" style="margin-top:8px">🗺️ '+esc(m.map)+' · 🎯 '+esc(m.operation)+'</div><details style="margin-top:10px"><summary>Ver resumen del combate</summary><p><b>🟢 Amigo</b><br>Operativos: '+ops+'<br>Tácticas: '+esc((m.chapter?.friend||[]).join(', ')||'Ninguna')+'</p><p><b>🔴 Rival</b><br>Operativos: '+eops+'<br>Tácticas: '+esc((m.chapter?.enemy||[]).join(', ')||'Ninguna')+'</p>'+timeline+'</details></div>'}).join('')}
+function delMatrix(id){if(!confirm('¿Borrar esta matriz?'))return;localStorage.setItem('ktc2',JSON.stringify(JSON.parse(localStorage.getItem('ktc2')||'[]').filter(m=>Number(m.id)!==Number(id))));renderSaved()}
+document.getElementById('saveBtn').onclick=saveMatrix;document.getElementById('savedBtn').onclick=()=>{app.style.display='none';saved.style.display='block';document.getElementById('backBtn').style.display='inline-block';document.getElementById('saveBtn').style.display='none';document.getElementById('savedBtn').style.display='none';renderSaved()};document.getElementById('backBtn').onclick=()=>{saved.style.display='none';app.style.display='block';document.getElementById('backBtn').style.display='none';document.getElementById('saveBtn').style.display='inline-block';document.getElementById('savedBtn').style.display='inline-block'};
 </script></body></html>
