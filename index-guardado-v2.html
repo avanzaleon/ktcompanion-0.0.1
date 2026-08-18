@@ -16,20 +16,17 @@
 <script>
 (function(){
 const frame=document.getElementById('game'),status=document.getElementById('status');
-
-/* Parche de armas: las selecciones se guardan fuera del DOM del iframe.
-   Así no se pierden cuando switchSide()/renderOps() reconstruyen los operativos. */
 function installWeaponPersistence(){
   const w=frame.contentWindow,d=frame.contentDocument;
   if(!w||!d||w.__ktWeaponPatchInstalled)return;
   w.__ktWeaponPatchInstalled=true;
   const state={friend:{},enemy:{}};
+  const getSide=()=>d.querySelector('#sideTabs .side.active')?.textContent.includes('RIVAL')?'enemy':'friend';
   const keyFor=(side,copy,weapon)=>side+'|'+copy+'|'+weapon;
-  function copyName(copy){return (copy.querySelector('b')?.textContent||'').trim()}
+  function copyName(copy){return (copy?.querySelector('b')?.textContent||'').trim()}
   function weaponName(row){return (row.querySelector('.wname')?.textContent||'').trim()}
   function restore(){
-    const side=w.currentSide||'friend';
-    const live={};
+    const side=getSide(),live={};
     d.querySelectorAll('#ops .copy').forEach(copy=>{
       const cn=copyName(copy);
       copy.querySelectorAll('.weapon').forEach(row=>{
@@ -45,25 +42,19 @@ function installWeaponPersistence(){
       if(!b||b.dataset.ktWeaponBound)return;
       b.dataset.ktWeaponBound='1';
       b.addEventListener('click',()=>{
-        const side=w.currentSide||'friend';
-        const copy=row.closest('.copy');
+        const side=getSide(),copy=row.closest('.copy');
         const key=keyFor(side,copyName(copy),weaponName(row));
         state[side][key]=b.classList.contains('on');
       });
     });
   }
   const originalRender=w.renderOps;
-  if(typeof originalRender==='function'){
-    w.renderOps=function(){originalRender.apply(this,arguments);restore()};
-  }
+  if(typeof originalRender==='function')w.renderOps=function(){originalRender.apply(this,arguments);restore()};
   const originalSwitch=w.switchSide;
-  if(typeof originalSwitch==='function'){
-    w.switchSide=function(side){originalSwitch.apply(this,arguments);restore()};
-  }
+  if(typeof originalSwitch==='function')w.switchSide=function(side){originalSwitch.apply(this,arguments);restore()};
   w.__ktRestoreWeapons=restore;
   restore();
 }
-
 function ready(){
   const d=frame.contentDocument;
   const ok=!!d&&!!d.getElementById('friend')&&!!d.getElementById('maps');
