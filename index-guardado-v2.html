@@ -5,31 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>KT Companion 2.0</title>
 <style>
-:root{--p:#151a20;--line:#303a45;--t:#edf2f6}*{box-sizing:border-box}html,body{margin:0;background:#0b0f14;color:var(--t);font:15px system-ui,sans-serif}
-#tools{position:sticky;top:0;z-index:20;background:#10151b;border-bottom:1px solid var(--line);padding:8px;display:flex;gap:8px;flex-wrap:wrap}
-#tools button{font:inherit;color:var(--t);background:var(--p);border:1px solid var(--line);border-radius:10px;padding:10px 13px;cursor:pointer}
-#tools .primary{background:#263b55;border-color:#6d9dcc}
-#game{display:block;width:100%;height:calc(100vh - 62px);min-height:700px;border:0}
-#saved{display:none;max-width:1050px;margin:auto;padding:14px}.card{background:var(--p);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}.mut{color:#9aa7b4}.danger{background:#3b2020!important;border-color:#633838!important}.pdf{background:#284d36!important;border-color:#4f8b63!important;color:white}.turn{border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0}
+:root{--p:#151a20;--line:#303a45;--t:#edf2f6}*{box-sizing:border-box}html,body{margin:0;background:#0b0f14;color:var(--t);font:15px system-ui,sans-serif}#tools{position:sticky;top:0;z-index:20;background:#10151b;border-bottom:1px solid var(--line);padding:8px;display:flex;gap:8px;flex-wrap:wrap}#tools button{font:inherit;color:var(--t);background:var(--p);border:1px solid var(--line);border-radius:10px;padding:10px 13px;cursor:pointer}.primary{background:#263b55!important;border-color:#6d9dcc!important}.pdf{background:#284d36!important;border-color:#4f8b63!important;color:#fff}.danger{background:#3b2020!important;border-color:#633838!important}.status{font-size:12px;color:#9aa7b4;padding:0 4px;align-self:center}.saved{display:none;max-width:1050px;margin:auto;padding:14px}.card{background:var(--p);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}.mut{color:#9aa7b4}.turn{border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0}.saved-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}#game{display:block;width:100%;height:calc(100vh - 62px);min-height:850px;border:0;background:#0b0f14}@media(max-width:600px){#game{min-height:1000px}}
 </style>
 </head>
 <body>
-<nav id="tools"><button class="primary" id="btnMatrix">⚔️ Matriz</button><button id="btnSave">💾 Guardar matriz</button><button id="btnSaved">📚 Matrices guardadas</button></nav>
+<nav id="tools"><button class="primary" id="btnMatrix">⚔️ Matriz</button><button id="btnSave">💾 Guardar matriz</button><button id="btnSaved">📚 Matrices guardadas</button><span id="status" class="status">Cargando…</span></nav>
 <iframe id="game" src="./ktcompanion-v17-ejercitos2.html?v=stable20260818" title="KT Companion"></iframe>
-<section id="saved"><div class="card"><h2>📚 Matrices guardadas</h2><div class="mut">Matrices guardadas en este dispositivo.</div></div><div id="savedList"></div></section>
-<script src="./kt-save-pdf.js?v=4"></script>
+<section id="saved" class="saved"><div class="card"><h2>📚 Matrices guardadas</h2><div class="mut">Matrices guardadas en este dispositivo.</div></div><div id="savedList"></div></section>
+<script src="./kt-save-pdf.js?v=5"></script>
 <script>
-(function(){
-  function bind(){
-    const matrix=document.getElementById('btnMatrix');
-    const save=document.getElementById('btnSave');
-    const saved=document.getElementById('btnSaved');
-    if(matrix) matrix.onclick=function(){ if(typeof backToGame==='function') backToGame(); };
-    if(save) save.onclick=function(){ if(typeof saveGame==='function') saveGame(); };
-    if(saved) saved.onclick=function(){ if(typeof showSaved==='function') showSaved(); };
-  }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bind); else bind();
-})();
+(function(){const frame=document.getElementById('game'),status=document.getElementById('status');function ready(){const d=frame.contentDocument;const ok=!!d&&!!d.getElementById('friend')&&!!d.getElementById('maps');status.textContent=ok?'✓ Matriz lista':'Esperando matriz…';return ok}frame.addEventListener('load',()=>setTimeout(ready,80));document.getElementById('btnSave').addEventListener('click',()=>{if(!ready()){alert('La matriz todavía está cargando. Espera un segundo e inténtalo de nuevo.');return}window.saveGame()});document.getElementById('btnSaved').addEventListener('click',()=>window.showSaved());document.getElementById('btnMatrix').addEventListener('click',()=>window.backToGame());setTimeout(ready,300);setTimeout(ready,1000)})();
 </script>
 </body>
 </html>
