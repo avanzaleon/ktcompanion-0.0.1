@@ -2,30 +2,21 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KT Companion — Guardado + PDF</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>KT Companion 2.0</title>
 <style>
-body{margin:0;background:#0b0f14;color:#edf2f6;font:15px system-ui,sans-serif}
-#tools{position:sticky;top:0;z-index:999;background:#10151b;border-bottom:1px solid #303a45;padding:8px;display:flex;gap:8px;flex-wrap:wrap}
-#tools button{font:inherit;color:#edf2f6;background:#151a20;border:1px solid #303a45;border-radius:10px;padding:10px 13px}
-.primary{background:#263b55!important;border-color:#6d9dcc!important}
-#saved{display:none;padding:14px;max-width:1050px;margin:auto}
-.card{background:#151a20;border:1px solid #303a45;border-radius:14px;padding:14px;margin:10px 0}
-.mut{color:#9aa7b4}.danger{background:#3b2020!important;border-color:#633838!important}.pdf{background:#284d36!important;border-color:#4f8b63!important}.turn{border:1px solid #303a45;border-radius:10px;padding:10px;margin:8px 0}
-#game{display:block;width:100%;height:calc(100vh - 65px);min-height:700px;border:0}
+:root{--p:#151a20;--line:#303a45;--t:#edf2f6}*{box-sizing:border-box}html,body{margin:0;background:#0b0f14;color:var(--t);font:15px system-ui,sans-serif}
+#tools{position:sticky;top:0;z-index:20;background:#10151b;border-bottom:1px solid var(--line);padding:8px;display:flex;gap:8px;flex-wrap:wrap}
+#tools button{font:inherit;color:var(--t);background:var(--p);border:1px solid var(--line);border-radius:10px;padding:10px 13px}
+#tools .primary{background:#263b55;border-color:#6d9dcc}
+#game{display:block;width:100%;height:calc(100vh - 62px);min-height:700px;border:0}
+#saved{display:none;max-width:1050px;margin:auto;padding:14px}.card{background:var(--p);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}.mut{color:#9aa7b4}.danger{background:#3b2020!important;border-color:#633838!important}.pdf{background:#284d36!important;border-color:#4f8b63!important;color:white}.turn{border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0}
 </style>
 </head>
 <body>
-<div id="tools">
-<button class="primary" onclick="backToGame()">⚔️ Matriz</button>
-<button onclick="saveGame()">💾 Guardar matriz</button>
-<button onclick="showSaved()">📚 Matrices guardadas</button>
-</div>
-<iframe id="game" src="./ktcompanion-v17-ejercitos2.html?v=20260818stable"></iframe>
-<main id="saved">
-<div class="card"><h2>📚 Matrices guardadas</h2><div class="mut">Matrices guardadas en este dispositivo.</div></div>
-<div id="savedList"></div>
-</main>
-<script src="./kt-save-pdf.js?v=2"></script>
+<nav id="tools"><button class="primary" id="btnMatrix">⚔️ Matriz</button><button id="btnSave">💾 Guardar matriz</button><button id="btnSaved">📚 Matrices guardadas</button></nav>
+<iframe id="game" src="./ktcompanion-v17-ejercitos2.html?v=stable20260818" title="KT Companion"></iframe>
+<section id="saved"><div class="card"><h2>📚 Matrices guardadas</h2><div class="mut">Matrices guardadas en este dispositivo.</div></div><div id="savedList"></div></section>
+<script src="./kt-save-pdf.js?v=3"></script>
 </body>
 </html>
