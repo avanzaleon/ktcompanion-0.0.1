@@ -13,6 +13,7 @@
 <iframe id="game" src="./ktcompanion-v17-ejercitos2.html?v=stable20260818" title="KT Companion"></iframe>
 <section id="saved" class="saved"><div class="card"><h2>📚 Matrices guardadas</h2><div class="mut">Matrices guardadas en este dispositivo.</div></div><div id="savedList"></div></section>
 <script src="./kt-save-pdf.js?v=5"></script>
+<script src="./kt-weapons-save-fix.js?v=1"></script>
 <script>
 (function(){
 const frame=document.getElementById('game'),status=document.getElementById('status');
@@ -37,7 +38,6 @@ function installWeaponPersistence(){
       });
     });
     Object.keys(state[side]).forEach(k=>{if(!live[k])delete state[side][k]});
-    d.querySelectorAll('#ops .weapon button').forEach(b=>{if(!b.dataset.ktWeaponBound)b.dataset.ktWeaponBound='1'});
   }
   function captureWeaponClick(e){
     const b=e.target?.closest?.('#ops .weapon button');
@@ -45,10 +45,7 @@ function installWeaponPersistence(){
     const row=b.closest('.weapon'),copy=b.closest('.copy');
     if(!row||!copy)return;
     const side=getSide(),key=keyFor(side,copyName(copy),weaponName(row));
-    // This runs BEFORE the original app click handler. Store the state
-    // that the button will have after the original handler toggles it.
     state[side][key]=!b.classList.contains('on');
-    // Do not stop propagation: the original app handler must still run.
     setTimeout(restore,0);
   }
   d.addEventListener('click',captureWeaponClick,true);
