@@ -37,22 +37,27 @@ function installWeaponPersistence(){
       });
     });
     Object.keys(state[side]).forEach(k=>{if(!live[k])delete state[side][k]});
-    d.querySelectorAll('#ops .weapon').forEach(row=>{
-      const b=row.querySelector('button');
-      if(!b||b.dataset.ktWeaponBound)return;
-      b.dataset.ktWeaponBound='1';
-      b.addEventListener('click',()=>{
-        const side=getSide(),copy=row.closest('.copy');
-        const key=keyFor(side,copyName(copy),weaponName(row));
-        state[side][key]=b.classList.contains('on');
-      });
-    });
+    d.querySelectorAll('#ops .weapon button').forEach(b=>{if(!b.dataset.ktWeaponBound)b.dataset.ktWeaponBound='1'});
   }
+  function captureWeaponClick(e){
+    const b=e.target?.closest?.('#ops .weapon button');
+    if(!b)return;
+    const row=b.closest('.weapon'),copy=b.closest('.copy');
+    if(!row||!copy)return;
+    const side=getSide(),key=keyFor(side,copyName(copy),weaponName(row));
+    // This runs BEFORE the original app click handler. Store the state
+    // that the button will have after the original handler toggles it.
+    state[side][key]=!b.classList.contains('on');
+    // Do not stop propagation: the original app handler must still run.
+    setTimeout(restore,0);
+  }
+  d.addEventListener('click',captureWeaponClick,true);
   const originalRender=w.renderOps;
-  if(typeof originalRender==='function')w.renderOps=function(){originalRender.apply(this,arguments);restore()};
+  if(typeof originalRender==='function')w.renderOps=function(){const r=originalRender.apply(this,arguments);setTimeout(restore,0);return r};
   const originalSwitch=w.switchSide;
-  if(typeof originalSwitch==='function')w.switchSide=function(side){originalSwitch.apply(this,arguments);restore()};
+  if(typeof originalSwitch==='function')w.switchSide=function(side){const r=originalSwitch.apply(this,arguments);setTimeout(restore,0);return r};
   w.__ktRestoreWeapons=restore;
+  w.__ktWeaponState=state;
   restore();
 }
 function ready(){
