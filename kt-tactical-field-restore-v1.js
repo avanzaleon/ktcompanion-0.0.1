@@ -1,4 +1,4 @@
-/* KT Companion — restauración robusta del campo táctico en T1-T4 v2 */
+/* KT Companion — restauración robusta del campo táctico en T1-T4 v3 */
 (function(){
   const frame=()=>document.getElementById('game');
   function inside(){
@@ -9,12 +9,12 @@
   }
   function refresh(){
     const x=inside(); if(!x) return;
-    const {d}=x;
+    const {d,w}=x;
     const s4=d.getElementById('s4');
     const tabs=d.getElementById('turntabs');
     if(!s4||!tabs||!s4.classList.contains('active')) return;
-    /* ktTacReady vive en la ventana PADRE, no dentro del iframe. */
-    try{ if(typeof window.ktTacReady==='function') window.ktTacReady(); }catch(e){}
+    // ktTacReady está definido por kt-tactical-field-v2.js DENTRO del iframe.
+    try{ if(typeof w.ktTacReady==='function') w.ktTacReady(); }catch(e){}
   }
   function install(){
     const x=inside(); if(!x) return;
