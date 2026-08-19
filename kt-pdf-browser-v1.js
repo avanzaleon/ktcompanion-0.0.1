@@ -1,0 +1,32 @@
+/* KT Companion — PDF robusto v1
+   Genera un documento HTML imprimible y deja al navegador hacer "Guardar como PDF".
+   No usa el generador PDF binario anterior.
+*/
+(function(){'use strict';
+const KEY='kt_companion_matrices_pdf2';
+const F=()=>document.getElementById('game'),D=()=>F()?.contentDocument||null,W=()=>F()?.contentWindow||null;
+const A=x=>Array.isArray(x)?x:[];
+const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]}};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const list=x=>A(x).length?A(x).map(esc).join(', '):'—';
+function liveWeapons(side){const d=D(),w=W(),out=[];if(!d||!w)return out;try{w.switchSide?.(side)}catch(e){}d.querySelectorAll('#ops .op.has .copy').forEach(c=>{const name=(c.querySelector('b')?.textContent||'').trim(),ws=[];c.querySelectorAll('.weapon').forEach(r=>{const b=r.querySelector('button'),n=(r.querySelector('.wname')?.textContent||'').trim();if(n&&(b?.classList.contains('on')||w.__ktWeaponState?.[side]?.[side+'|'+name+'|'+n]===true))ws.push(n)});if(name&&ws.length)out.push({name,weapons:[...new Set(ws)]})});return out}
+function liveMap(turn){const d=D(),w=W();if(!d||!w)return null;try{w.switchTurn?.(turn)}catch(e){}const f=d.querySelector('#ktField'),img=f?.querySelector('#ktimg');if(!f||!img)return null;const map=img.currentSrc||img.src||'';if(!map)return null;const marks=[...f.querySelectorAll('.ktm.friend,.ktm.enemy')].map(m=>({side:m.classList.contains('friend')?'friend':'enemy',label:m.textContent.trim(),left:m.style.left||'0%',top:m.style.top||'0%'}));return{map,marks,name:d.querySelector('.mapchoice.selected')?.textContent.trim()||'Mapa'} }
+function weaponText(x){return A(x).length?A(x).map(w=>'<div class="weapon"><b>'+esc(w.name)+'</b>: '+A(w.weapons).map(esc).join(', ')+'</div>').join(''):'<div class="mut">Ninguna seleccionada</div>'}
+function opText(x){return Object.entries(x||{}).map(([n,q])=>esc(n)+(q>1?' ×'+q:'')).join(', ')||'Ninguno'}
+function captureTurns(s){const out={};for(let t=1;t<=4;t++){out[t]=liveMap(t)}try{W()?.switchTurn?.(1)}catch(e){}return out}
+function printDoc(s,i){
+ const turns=captureTurns(s),fw=liveWeapons('friend'),ew=s.enemy?liveWeapons('enemy'):[];
+ const friendWeapons=fw.length?fw:(A(s.weapons?.friend).length?s.weapons.friend:[]),enemyWeapons=ew.length?ew:(A(s.weapons?.enemy).length?s.weapons.enemy:[]);
+ if(friendWeapons.length){s.weapons=s.weapons||{};s.weapons.friend=friendWeapons}if(s.enemy&&enemyWeapons.length){s.weapons=s.weapons||{};s.weapons.enemy=enemyWeapons}localStorage.setItem(KEY,JSON.stringify(read()));
+ let pages='';
+ for(let t=1;t<=4;t++){
+   const m=turns[t],f=s.turns?.friend?.[t]||{},r=s.turns?.enemy?.[t]||{};
+   const map=m?'<div class="map"><img src="'+m.map+'">'+m.marks.map(x=>'<span class="mark '+x.side+'" style="left:'+esc(x.left)+';top:'+esc(x.top)+'">'+esc(x.label)+'</span>').join('')+'</div>':'<div class="missing">No se pudo capturar el campo táctico de este turno.</div>';
+   pages+='<section class="page"><h2>Turno '+t+'</h2><div class="grid"><div><h3>🔵 Amigo</h3><p><b>Estrategia:</b> '+list(f.strategy)+'</p><p><b>Tiroteo:</b> '+list(f.firefight)+'</p><p><b>Facción:</b> '+list(f.faction)+'</p><p><b>Universal:</b> '+list(f.universal)+'</p></div>'+(s.enemy?'<div><h3>🔴 Rival</h3><p><b>Estrategia:</b> '+list(r.strategy)+'</p><p><b>Tiroteo:</b> '+list(r.firefight)+'</p><p><b>Facción:</b> '+list(r.faction)+'</p><p><b>Universal:</b> '+list(r.universal)+'</p></div>':'')+'</div>'+map+'</section>';
+ }
+ const logo='./icon-512.png?v=pdf-browser-v1';
+ const html='<!doctype html><html lang="es"><head><meta charset="utf-8"><title>KT Companion - Matriz</title><style>@page{size:A4;margin:12mm}*{box-sizing:border-box}body{font:12px Arial,sans-serif;color:#15191e;margin:0}.cover{min-height:270mm;position:relative;padding:8mm 4mm}.logo{width:105px;height:105px;object-fit:contain;position:absolute;right:4mm;top:4mm}.seal{display:inline-block;border:3px solid #8b2b23;border-radius:50%;padding:9px;width:62px;height:62px;text-align:center;font-weight:900;font-size:9px;line-height:1.1;color:#8b2b23;transform:rotate(-8deg);margin-bottom:18px}.cover h1{font-size:25px;margin:0 0 5px}.cover h2{font-size:16px;border-bottom:1px solid #bbb;padding-bottom:5px;margin-top:20px}.box{border:1px solid #aaa;border-radius:8px;padding:10px;margin:8px 0}.weapon{padding:4px 0;border-bottom:1px solid #ddd}.mut{color:#666}.page{break-before:page;min-height:270mm}.page h2{font-size:20px;border-bottom:2px solid #333;padding-bottom:6px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid>div{border:1px solid #bbb;border-radius:8px;padding:8px}.grid h3{margin:0 0 6px}.map{position:relative;width:100%;margin-top:10px;border:1px solid #888;border-radius:7px;overflow:hidden}.map img{display:block;width:100%;height:auto}.mark{position:absolute;transform:translate(-50%,-50%);width:22px;height:22px;border:2px solid white;border-radius:50%;color:white;font:bold 7px Arial;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px #000}.mark.friend{background:#1976d2}.mark.enemy{background:#d72d2d}.missing{border:1px dashed #999;padding:20px;margin-top:15px;color:#666}@media print{.page{break-before:page}}</style></head><body><section class="cover"><img class="logo" src="'+logo+'"><div class="seal">ALPHA<br>VERSION</div><h1>KT Companion</h1><p><b>Cuaderno de batalla</b></p><div class="box"><b>Ejército amigo:</b> '+esc(s.friend)+'<br><b>Ejército rival:</b> '+esc(s.enemy||'—')+'<br><b>Mapa:</b> '+esc(s.map)+'<br><b>Operación:</b> '+esc(s.operation)+'<br><b>Fecha:</b> '+esc(s.date)+'</div><h2>Operativos amigo</h2><p>'+opText(s.counts?.friend)+'</p><h2>🔫 Armas seleccionadas — amigo</h2><div class="box">'+weaponText(friendWeapons)+'</div>'+(s.enemy?'<h2>Operativos rival</h2><p>'+opText(s.counts?.enemy)+'</p><h2>🔫 Armas seleccionadas — rival</h2><div class="box">'+weaponText(enemyWeapons)+'</div>':'')+'</section>'+pages+'</body></html>';
+ const win=window.open('','_blank','width=1000,height=800');if(!win){alert('El navegador ha bloqueado la ventana del PDF. Permite ventanas emergentes para KT Companion.');return}win.document.open();win.document.write(html);win.document.close();win.focus();setTimeout(()=>win.print(),900);
+}
+window.exportPDF=function(i){const a=read(),s=a[i];if(!s){alert('No se encontró la matriz.');return}printDoc(s,i)};
+})();
