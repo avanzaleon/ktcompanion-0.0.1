@@ -1,40 +1,17 @@
-/* KT Companion — captura fiable de armas */
-(function(){
-  const frame=()=>document.getElementById('game');
-  const doc=()=>frame()?.contentDocument||null;
-  const win=()=>frame()?.contentWindow||null;
-  const selectedChoices=id=>{const d=doc();return [...(d?.querySelectorAll('#'+id+' input:checked')||[])].map(x=>x.parentElement?.querySelector('span')?.textContent.trim()).filter(Boolean)};
-  const getBasic=()=>{const d=doc();return{friend:d?.getElementById('friend')?.value||'',enemy:d?.getElementById('enemy')?.value||'',map:d?.querySelector('.mapchoice.selected')?.textContent.trim()||'',operation:(d?.querySelector('.opchoice.selected')?.textContent||'').replace(/^\d+\.\s*/,'').trim()}};
-  const switchSide=side=>{try{return typeof win()?.switchSide==='function'?win().switchSide(side):null}catch(e){return null}};
-  const switchTurnSide=side=>{try{return typeof win()?.switchTurnSide==='function'?win().switchTurnSide(side):null}catch(e){return null}};
-  const switchTurn=t=>{try{return typeof win()?.switchTurn==='function'?win().switchTurn(t):null}catch(e){return null}};
-  function collectCounts(side){switchSide(side);const d=doc(),out={};d?.querySelectorAll('#ops .op.has').forEach(x=>{const name=x.querySelector('.opname')?.childNodes[0]?.textContent.trim();const qty=Number(x.querySelector('.qty b')?.textContent||0);if(name&&qty)out[name]=qty});return out}
-  function collectWeapons(side){
-    switchSide(side);
-    const d=doc(),state=win()?.__ktWeaponState?.[side]||{},out=[];
-    d?.querySelectorAll('#ops .op.has .copy').forEach(copy=>{
-      const name=(copy.querySelector('b')?.textContent||'').trim(),weapons=[];
-      copy.querySelectorAll('.weapon').forEach(row=>{
-        const weapon=(row.querySelector('.wname')?.textContent||'').trim(),key=side+'|'+name+'|'+weapon,b=row.querySelector('button');
-        if(b?.classList.contains('on')||state[key]===true)weapons.push(weapon);
-      });
-      if(weapons.length)out.push({name,weapons});
-    });
-    return out;
-  }
-  function collectChapter(side){switchTurnSide(side);const d=doc();return[...(d?.querySelectorAll('#chapter input:checked')||[])].map(x=>x.parentElement?.querySelector('span')?.textContent.trim()).filter(Boolean)}
-  function collectTurns(side){switchTurnSide(side);const out={};for(let t=1;t<=4;t++){switchTurn(t);out[t]={strategy:selectedChoices('strategy'),firefight:selectedChoices('firefight'),faction:selectedChoices('faction'),universal:selectedChoices('universal')}}return out}
-  window.saveGame=function(){
-    try{
-      const d=doc(),b=getBasic();
-      if(!d)return alert('La matriz todavía está cargando.');
-      if(!b.friend||!b.map||!b.operation)return alert('Selecciona ejército amigo, mapa y operación antes de guardar.');
-      win()?.__ktSyncWeapons?.();
-      const s={id:Date.now(),date:new Date().toLocaleString('es-ES'),friend:b.friend,enemy:b.enemy,map:b.map,operation:b.operation,counts:{friend:collectCounts('friend'),enemy:{}},weapons:{friend:collectWeapons('friend'),enemy:[]},chapter:{friend:collectChapter('friend'),enemy:[]},turns:{friend:collectTurns('friend'),enemy:{}}};
-      if(b.enemy){s.counts.enemy=collectCounts('enemy');s.weapons.enemy=collectWeapons('enemy');s.chapter.enemy=collectChapter('enemy');s.turns.enemy=collectTurns('enemy')}
-      switchSide('friend');switchTurnSide('friend');switchTurn(1);
-      const key='kt_companion_matrices_pdf2';let a=[];try{a=JSON.parse(localStorage.getItem(key)||'[]')}catch(e){}a.unshift(s);localStorage.setItem(key,JSON.stringify(a));
-      alert('Matriz guardada correctamente.');window.showSaved?.();
-    }catch(e){console.error(e);alert('No se pudo guardar la matriz: '+(e?.message||e))}
-  };
+/* KT Companion — Guardado de matriz v3
+   Una sola fuente de verdad para armas + campo táctico.
+*/
+(function(){'use strict';
+const KEY='kt_companion_matrices_pdf2',FIELD='kt_tactical_field_v2';
+const frame=()=>document.getElementById('game'),doc=()=>frame()?.contentDocument||null,win=()=>frame()?.contentWindow||null;
+const arr=x=>Array.isArray(x)?x:[];
+const selected=id=>{const d=doc();return [...(d?.querySelectorAll('#'+id+' input:checked')||[])].map(x=>x.parentElement?.querySelector('span')?.textContent.trim()).filter(Boolean)};
+function basic(){const d=doc();return{friend:d?.getElementById('friend')?.value||'',enemy:d?.getElementById('enemy')?.value||'',map:d?.querySelector('.mapchoice.selected')?.textContent.trim()||'',operation:(d?.querySelector('.opchoice.selected')?.textContent||'').replace(/^\d+\.\s*/,'').trim()}}
+function side(side){try{win()?.switchSide?.(side)}catch(e){}}
+function counts(sideName){side(sideName);const d=doc(),out={};d?.querySelectorAll('#ops .op.has').forEach(op=>{const n=(op.querySelector('.opname')?.childNodes[0]?.textContent||op.querySelector('.opname')?.textContent||'').trim(),q=Number(op.querySelector('.qty b')?.textContent||0);if(n&&q)out[n]=q});return out}
+function weapons(sideName){side(sideName);const d=doc(),w=win(),state=w?.__ktWeaponState?.[sideName]||{},out=[];d?.querySelectorAll('#ops .op.has').forEach(op=>{const name=(op.querySelector('.opname')?.childNodes[0]?.textContent||op.querySelector('.opname')?.textContent||'').trim();if(!name)return;const ws=[];op.querySelectorAll('.weapon').forEach(row=>{const n=(row.querySelector('.wname')?.textContent||'').trim(),b=row.querySelector('button'),key=sideName+'|'+name+'|'+n;if(n&&(b?.classList.contains('on')||state[key]===true))ws.push(n)});if(ws.length)out.push({name,weapons:[...new Set(ws)]})});return out}
+function turns(sideName){try{win()?.switchTurnSide?.(sideName)}catch(e){}const out={};for(let t=1;t<=4;t++){try{win()?.switchTurn?.(t)}catch(e){}out[t]={strategy:selected('strategy'),firefight:selected('firefight'),faction:selected('faction'),universal:selected('universal')}}return out}
+function normalizeDrawings(X){if(!X)return null;const bw=X.boardSize?.width||900,bh=X.boardSize?.height||630;return {...X,boardSize:{width:bw,height:bh},drawings:arr(X.drawings).map(o=>{const q={type:o.type,color:o.color||'#ffcc33',width:o.width||4};if(o.a)q.a={x:o.a.x/bw*900,y:o.a.y/bh*630};if(o.b)q.b={x:o.b.x/bw*900,y:o.b.y/bh*630};if(o.pts)q.pts=o.pts.map(p=>({x:p.x/bw*900,y:p.y/bh*630}));return q})}}
+function snapshotField(map){let S={};try{S=JSON.parse(localStorage.getItem(FIELD)||'{}')}catch(e){}const w=win(),d=doc(),image=(()=>{try{return w?.__ktMapImages?.[map]||localStorage.getItem('kt_map_'+map)||''}catch(e){return''}})(),out={};for(let t=1;t<=4;t++){const f=S['friend_'+t],e=S['enemy_'+t];out[t]={image,friend:normalizeDrawings(f),enemy:normalizeDrawings(e)}}try{w?.switchTurnSide?.('friend');w?.switchTurn?.(1)}catch(e){}return out}
+window.saveGame=function(){try{const d=doc(),w=win(),b=basic();if(!d){alert('La matriz todavía está cargando.');return}if(!b.friend||!b.map||!b.operation){alert('Selecciona ejército amigo, mapa y operación antes de guardar.');return}w?.__ktSyncWeapons?.();const s={id:Date.now(),date:new Date().toLocaleString('es-ES'),friend:b.friend,enemy:b.enemy,map:b.map,operation:b.operation,counts:{friend:counts('friend'),enemy:{}},weapons:{friend:weapons('friend'),enemy:[]},turns:{friend:turns('friend'),enemy:{}},tacOps:{friend:{},enemy:{}},battlefields:snapshotField(b.map)};if(b.enemy){s.counts.enemy=counts('enemy');s.weapons.enemy=weapons('enemy');s.turns.enemy=turns('enemy')}if(w?.__ktTacOpState)s.tacOps={friend:{...w.__ktTacOpState.friend},enemy:{...w.__ktTacOpState.enemy}};let a=[];try{a=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){}a.unshift(s);localStorage.setItem(KEY,JSON.stringify(a));window.showSaved?.();alert('Matriz guardada correctamente con armas y campo táctico.')}catch(e){console.error(e);alert('No se pudo guardar la matriz: '+(e?.message||e))}};
 })();
