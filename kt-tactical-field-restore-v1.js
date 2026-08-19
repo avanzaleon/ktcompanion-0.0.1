@@ -1,4 +1,4 @@
-/* KT Companion — restauración robusta del campo táctico en T1-T4 */
+/* KT Companion — restauración robusta del campo táctico en T1-T4 v2 */
 (function(){
   const frame=()=>document.getElementById('game');
   function inside(){
@@ -9,20 +9,21 @@
   }
   function refresh(){
     const x=inside(); if(!x) return;
-    const {d,w}=x;
+    const {d}=x;
     const s4=d.getElementById('s4');
     const tabs=d.getElementById('turntabs');
     if(!s4||!tabs||!s4.classList.contains('active')) return;
-    try{ if(typeof w.ktTacReady==='function') w.ktTacReady(); }catch(e){}
+    /* ktTacReady vive en la ventana PADRE, no dentro del iframe. */
+    try{ if(typeof window.ktTacReady==='function') window.ktTacReady(); }catch(e){}
   }
   function install(){
     const x=inside(); if(!x) return;
-    const {f,d,w}=x;
+    const {d}=x;
     if(d.__ktFieldRestoreInstalled) return;
     d.__ktFieldRestoreInstalled=true;
-    const fire=()=>{setTimeout(refresh,0);setTimeout(refresh,100);setTimeout(refresh,350);setTimeout(refresh,800)};
+    const fire=()=>{setTimeout(refresh,0);setTimeout(refresh,100);setTimeout(refresh,350);setTimeout(refresh,800);setTimeout(refresh,1500)};
     d.addEventListener('click',e=>{
-      const b=e.target.closest('#turntabs .turntab, #s4 .actions button, #s4 .side');
+      const b=e.target.closest('#turntabs .turntab, #s4 .actions button, #s4 .side, #turnSideTabs .side');
       if(b) fire();
     },true);
     const s4=d.getElementById('s4');
@@ -34,5 +35,5 @@
   }
   const f=frame();
   if(f) f.addEventListener('load',()=>setTimeout(install,120));
-  [100,500,1200,2200].forEach(ms=>setTimeout(install,ms));
+  [100,500,1200,2200,3500].forEach(ms=>setTimeout(install,ms));
 })();
