@@ -1,4 +1,4 @@
-/* KT Companion — mover dibujos y mediciones */
+/* KT Companion — mover dibujos/mediciones + asegurar fondo de mapa */
 (function(){
   const STORE='kt_tactical_field_v2';
   const frame=()=>document.getElementById('game');
@@ -8,6 +8,15 @@
   const load=()=>{try{return JSON.parse(localStorage.getItem(STORE)||'{}')}catch(e){return {}}};
   const save=s=>localStorage.setItem(STORE,JSON.stringify(s));
   let drag=null;
+
+  function restoreMap(){
+    const D=d(),W=w(); if(!D||!W)return;
+    const field=D.getElementById('ktField'); if(!field)return;
+    const img=field.querySelector('#ktuiimg'); if(!img)return;
+    const name=D.querySelector('.mapchoice.selected')?.textContent.trim()||'Mapa de pruebas';
+    const src=W.__ktMapImages?.[name]||localStorage.getItem('kt_map_'+name)||W.__ktMapImages?.['Mapa de pruebas'];
+    if(src && img.getAttribute('src')!==src) img.setAttribute('src',src);
+  }
   function activeSelect(D){return !!D?.querySelector('#ktField [data-k="select"].active')}
   function pointDist(px,py,ax,ay){return Math.hypot(px-ax,py-ay)}
   function segDist(px,py,ax,ay,bx,by){const dx=bx-ax,dy=by-ay;if(dx===0&&dy===0)return pointDist(px,py,ax,ay);const t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy)));return pointDist(px,py,ax+t*dx,ay+t*dy)}
@@ -20,16 +29,13 @@
   function boardPoint(e){const c=d()?.querySelector('#ktField .ktcanvas');if(!c)return null;const r=c.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
   function begin(e){
     const D=d();if(!D||!activeSelect(D))return;
-    // Never steal pointer events from the blue/red operative markers.
     if(e.target?.closest?.('.ktm'))return;
     const p=boardPoint(e);if(!p)return;
     const s=load(),t=turn();
     for(const side of ['enemy','friend']){
       const k=side+'_'+t,arr=s[k]?.drawings||[];
       for(let i=arr.length-1;i>=0;i--)if(hit(arr[i],p.x,p.y)){
-        drag={k,index:i,last:p,pointer:e.pointerId};
-        e.preventDefault();e.stopImmediatePropagation();
-        return;
+        drag={k,index:i,last:p,pointer:e.pointerId};e.preventDefault();e.stopImmediatePropagation();return;
       }
     }
   }
@@ -38,12 +44,21 @@
     const p=boardPoint(e);if(!p)return;
     const s=load(),o=s[drag.k]?.drawings?.[drag.index];if(!o)return;
     move(o,p.x-drag.last.x,p.y-drag.last.y);drag.last=p;save(s);
-    w()?.ktTacReady?.();
-    e.preventDefault();e.stopImmediatePropagation();
+    w()?.ktTacReady?.();e.preventDefault();e.stopImmediatePropagation();
   }
   function end(e){if(!drag)return;e.preventDefault();e.stopImmediatePropagation();drag=null;w()?.ktTacReady?.()}
-  function install(){const D=d();if(!D)return;if(D.documentElement.dataset.ktMoveInstalled==='1')return;D.documentElement.dataset.ktMoveInstalled='1';D.addEventListener('pointerdown',begin,true);D.addEventListener('pointermove',moveDrag,true);D.addEventListener('pointerup',end,true);D.addEventListener('pointercancel',end,true)}
+  function install(){
+    const D=d();if(!D)return;
+    if(D.documentElement.dataset.ktMoveInstalled!=='1'){
+      D.documentElement.dataset.ktMoveInstalled='1';
+      D.addEventListener('pointerdown',begin,true);
+      D.addEventListener('pointermove',moveDrag,true);
+      D.addEventListener('pointerup',end,true);
+      D.addEventListener('pointercancel',end,true);
+    }
+    restoreMap();
+  }
   window.addEventListener('load',()=>setTimeout(install,500));
-  const f=frame();f?.addEventListener('load',()=>setTimeout(install,500));
+  const f=frame();f?.addEventListener('load',()=>setTimeout(install,700));
   setInterval(install,800);
 })();
