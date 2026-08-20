@@ -1,0 +1,29 @@
+/* KT Companion — Medición táctica en pulgadas v1
+   Añade etiquetas persistentes a líneas/reglas/áreas y áreas prefijadas de 0.5, 1 y 2 pulgadas.
+   El tablero de Kill Team se toma como 30" de ancho. No modifica el motor de guardado del campo. */
+(function(){'use strict';
+const STORE='kt_tactical_field_v2',BOARD_IN=30;
+const frame=()=>document.getElementById('game'), D=()=>frame()?.contentDocument;
+const state=()=>{try{return JSON.parse(localStorage.getItem(STORE)||'{}')}catch(e){return{}}};
+const save=s=>localStorage.setItem(STORE,JSON.stringify(s));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function css(d){if(d.getElementById('ktMeasureCss'))return;const s=d.createElement('style');s.id='ktMeasureCss';s.textContent=`#ktMeasureLayer{position:absolute;inset:0;z-index:7;pointer-events:none;overflow:visible}.ktMeasureLabel{font:900 12px system-ui,sans-serif;fill:#fff;paint-order:stroke;stroke:#000;stroke-width:4px;stroke-linejoin:round}.ktMeasurePreview{font:900 12px system-ui,sans-serif;fill:#fff;paint-order:stroke;stroke:#000;stroke-width:4px}.ktAreaPreset{font-weight:800!important}.ktAreaPreset.active{background:#263b55!important;border-color:#6d9dcc!important}`;d.head.appendChild(s)}
+function setup(){const d=D();if(!d)return;const field=d.getElementById('ktField');if(!field)return;css(d);const vp=field.querySelector('.ktviewport'), board=field.querySelector('.ktboard'), canvas=field.querySelector('.ktcanvas');if(!vp||!board||!canvas)return;
+let layer=field.querySelector('#ktMeasureLayer');if(!layer){layer=d.createElementNS('http://www.w3.org/2000/svg','svg');layer.id='ktMeasureLayer';layer.setAttribute('width','100%');layer.setAttribute('height','100%');layer.setAttribute('viewBox','0 0 100 100');board.appendChild(layer)}
+let preview=field.querySelector('#ktMeasurePreview');if(!preview){preview=d.createElementNS('http://www.w3.org/2000/svg','g');preview.id='ktMeasurePreview';layer.appendChild(preview)}
+function pxPerIn(){return board.getBoundingClientRect().width/BOARD_IN}
+function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+function inches(a,b){return dist(a,b)/pxPerIn()}
+function label(v){return (Math.round(v*10)/10).toFixed(1).replace('.0','')+'"'}
+function text(x,y,t){const z=d.createElementNS('http://www.w3.org/2000/svg','text');z.classList.add('ktMeasureLabel');z.setAttribute('x',x);z.setAttribute('y',y);z.setAttribute('text-anchor','middle');z.textContent=t;return z}
+function render(){while(layer.firstChild)layer.removeChild(layer.firstChild);layer.appendChild(preview);preview.innerHTML='';const s=state();const t=frame()?.contentWindow?.__ktCurrentTurn||1;for(const side of ['friend','enemy']){const x=s[side+'_'+t];if(!x)continue;(x.drawings||[]).forEach(o=>{if(!o.a||!o.b)return;const dx=o.b.x-o.a.x,dy=o.b.y-o.a.y,L=dist(o.a,o.b),mid={x:(o.a.x+o.b.x)/2,y:(o.a.y+o.b.y)/2};if(o.type==='line'||o.type==='ruler'){const n=text(mid.x,mid.y-7,label(L/pxPerIn()));n.setAttribute('transform',`rotate(${Math.atan2(dy,dx)*180/Math.PI} ${mid.x} ${mid.y})`);layer.appendChild(n)}else if(o.type==='area'){const r=L, n=text(o.a.x,o.a.y-r-7,'R '+label(r/pxPerIn()));layer.appendChild(n);const q=text(o.a.x,o.a.y+5,'Ø '+label((2*r)/pxPerIn()));q.setAttribute('font-size','10');layer.appendChild(q)}})} }
+function previewLine(a,b,mode){preview.innerHTML='';if(!a||!b)return;const n=d.createElementNS('http://www.w3.org/2000/svg','line');n.setAttribute('x1',a.x);n.setAttribute('y1',a.y);n.setAttribute('x2',b.x);n.setAttribute('y2',b.y);n.setAttribute('stroke','#fff');n.setAttribute('stroke-width','2');n.setAttribute('stroke-dasharray','7 5');preview.appendChild(n);const L=inches(a,b),m={x:(a.x+b.x)/2,y:(a.y+b.y)/2};preview.appendChild(text(m.x,m.y-8,label(L)))}
+let start=null,preset=null;
+function xy(e){const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
+canvas.addEventListener('pointerdown',e=>{const tool=field.querySelector('[data-k].active')?.dataset.k;if(tool==='line'||tool==='ruler'||tool==='area'){start=xy(e)}},true);
+canvas.addEventListener('pointermove',e=>{if(!start)return;const tool=field.querySelector('[data-k].active')?.dataset.k;if(tool==='line'||tool==='ruler'||tool==='area')previewLine(start,xy(e),tool)},true);
+canvas.addEventListener('pointerup',e=>{if(!start)return;const end=xy(e),tool=field.querySelector('[data-k].active')?.dataset.k;const s=state(),t=frame()?.contentWindow?.__ktCurrentTurn||1;for(const side of ['friend','enemy']){const x=s[side+'_'+t];if(!x)continue;x.drawings=x.drawings||[];const o=x.drawings[x.drawings.length-1];if(!o)continue;if(tool==='area'&&preset){const pp=pxPerIn()*preset;o.b={x:o.a.x+pp,y:o.a.y};o.measureIn=preset;o.presetRadius=preset;preset=null}else if(tool==='line'||tool==='ruler'||tool==='area'){o.measureIn=dist(o.a,o.b)/pxPerIn();if(tool==='area')o.radiusIn=o.measureIn} }save(s);start=null;preview.innerHTML='';setTimeout(render,20)},true);
+// Presets are inserted once per field.
+const bar=field.querySelector('.ktbar');if(bar&&!bar.querySelector('.ktAreaPreset')){const sep=d.createElement('span');sep.className='ktmut';sep.textContent='Áreas:';bar.appendChild(sep);[0.5,1,2].forEach(v=>{const b=d.createElement('button');b.className='ktAreaPreset';b.textContent='⭕ '+label(v)+' radio';b.title='Área circular de '+label(v)+' de radio';b.onclick=()=>{preset=v;bar.querySelectorAll('.ktAreaPreset').forEach(q=>q.classList.remove('active'));b.classList.add('active');field.querySelector('[data-k="area"]')?.click()};bar.appendChild(b)})}
+render();}
+let last='';function boot(){const f=frame(),d=D();if(!d)return;const h=d.getElementById('ktField');if(h&&h!==last){last=h;setTimeout(setup,30)}else if(h)setup()}setInterval(boot,500);})();
