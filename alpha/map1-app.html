@@ -1,0 +1,36 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>KT Companion Alpha — Mapa 1</title><style>html,body{margin:0;background:#080b0d;color:#eee;font-family:Arial,sans-serif}#loading{min-height:100vh;display:flex;align-items:center;justify-content:center;font-weight:bold}</style></head><body><div id="loading">Cargando KT Companion…</div><script>
+const MAP1='https://res.cloudinary.com/fe7sozkn/image/upload/v1787691808/7ad489f1-9127-4431-a2fe-4281b537241f.jpg';
+fetch('pilot-fixed.html?map1core='+Date.now()).then(r=>{if(!r.ok)throw new Error('No se pudo cargar pilot-fixed.html');return r.text()}).then(html=>{
+ const patch=`<script>
+const KT_MAP1_URL='${MAP1}';
+const KT_MAP1_IMG=new Image();KT_MAP1_IMG.crossOrigin='anonymous';KT_MAP1_IMG.src=KT_MAP1_URL;
+function ktMapReady(){return KT_MAP1_IMG.complete&&KT_MAP1_IMG.naturalWidth>0}
+function drawMapBackground(x,w,h){
+ x.save();
+ if(ktMapReady()){
+   x.drawImage(KT_MAP1_IMG,0,0,w,h);
+ }else{
+   x.fillStyle='#77766e';x.fillRect(0,0,w,h);
+   x.fillStyle='#454741';x.fillRect(0,0,w,h);
+ }
+ x.restore();
+}
+function draw(){
+ if(!ctx)return;let r=canvas.getBoundingClientRect();ctx.clearRect(0,0,r.width,r.height);drawMapBackground(ctx,r.width,r.height);
+ objs.forEach(o=>{ctx.globalAlpha=o.opa??1;ctx.strokeStyle=o.color||color;ctx.fillStyle=o.color||color;ctx.lineWidth=window.lineWidth||3;
+ if(['line','pen'].includes(o.t)){ctx.beginPath();ctx.moveTo(o.x1,o.y1);ctx.lineTo(o.x2,o.y2);ctx.stroke()}
+ else if(o.t==='rect')ctx.strokeRect(o.x1,o.y1,o.x2-o.x1,o.y2-o.y1);
+ else if(o.t==='circle'){ctx.beginPath();ctx.arc(o.x1,o.y1,Math.hypot(o.x2-o.x1,o.y2-o.y1),0,Math.PI*2);ctx.stroke()}
+ else if(o.t==='arrow'){ctx.beginPath();ctx.moveTo(o.x1,o.y1);ctx.lineTo(o.x2,o.y2);ctx.stroke()}
+ else if(o.t==='text'){ctx.font='16px Arial';ctx.fillText(o.text,o.x,o.y)}
+ else if(o.t==='token'){ctx.beginPath();ctx.arc(o.x,o.y,o.size/2,0,Math.PI*2);ctx.stroke();ctx.font='9px Arial';ctx.textAlign='center';ctx.fillText(o.size+'mm',o.x,o.y+3)}
+ else if(o.t==='icon'){ctx.font=o.size+'px Arial';ctx.textAlign='center';ctx.fillText(o.icon,o.x,o.y)}
+ else if(['temp','ruler'].includes(o.t)){ctx.beginPath();ctx.moveTo(o.x1,o.y1);ctx.lineTo(o.x2,o.y2);ctx.stroke();ctx.font='12px Arial';ctx.fillText((Math.hypot(o.x2-o.x1,o.y2-o.y1)/40).toFixed(2)+'\\\"',o.x2+5,o.y2-5)}ctx.globalAlpha=1});
+}
+const ktOldSaveState=saveState;saveState=function(){ktOldSaveState();try{if(canvas&&ktMapReady()){draw();let s=state();s.objects=cp(objs);s.notes=document.getElementById('notes')?.value||s.notes;s.image=canvas.toDataURL('image/jpeg',0.92)}}catch(e){console.warn('Map image save failed',e)}};
+KT_MAP1_IMG.onload=()=>{try{if(typeof board==='function'&&canvas){draw()}}catch(e){}};
+const ktOldPdf=pdf;pdf=function(id){let m=JSON.parse(localStorage.getItem('ktMatrices')||'[]').find(x=>x.id===id);if(!m)return;let w=open('','_blank');if(!w)return alert('Permite ventanas emergentes.');let armyId=m.army||'aod';let data=armyId==='pm'?PM_DATA:armyId==='bok'?BOK_DATA:armyId==='wk'?WK_DATA:armyId==='sanc'?SANC_DATA:AOD_DATA;let ops=Object.entries(m.operatives).map(([k,v])=>'<li>'+esc(data[k]?.n||k)+' × '+v.qty+' — '+v.weapons.map(esc).join(', ')+'</li>').join('');let pages=PH.map(p=>{let s=m.phases?.[p];if(!s)return '';return '<section><h1>'+PN[p]+'</h1>'+(s.image?'<div class="mapbox"><img src="'+s.image+'"></div>':'')+'<h3>Notas</h3><div class="box">'+esc(s.notes||'')+'</div><h3>Ardides estratégicos</h3>'+pdfList(s.strategy,ARMY_RULES[armyId]?.strategy||STR)+'<h3>Ardides de tiroteo</h3>'+pdfList(s.firefight,ARMY_RULES[armyId]?.firefight||FIR)+'<h3>Equipamiento de facción</h3>'+pdfList(s.factionEquipment,ARMY_RULES[armyId]?.factionEquipment||FEQ)+'<h3>Equipamiento universal</h3>'+pdfList(s.universalEquipment,UEQ)+'</section>'}).join('');w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>KT Companion</title><style>@page{size:A4;margin:10mm}body{font:12px Arial;color:#111}section{page-break-after:always}.mapbox{width:100%;aspect-ratio:30/22;border:1px solid #777;overflow:hidden;margin:5mm 0}.mapbox img{display:block;width:100%;height:100%;object-fit:fill}.box{border:1px solid #aaa;padding:10px;min-height:12mm}</style></head><body><section style="text-align:center"><img src="'+location.origin+'/ktcompanion-0.0.1/alpha/assets/kt-companion-alpha.jpg" style="width:75mm;max-height:75mm;object-fit:contain;margin-bottom:8mm"><h1>⚔ KT COMPANION</h1><div class="box" style="text-align:left"><b>'+esc(m.name)+'</b><br>Kill Team: '+esc(m.team)+'<br>Mapa: '+esc(m.map)+'<br>Operación crítica: '+esc(m.operation)+'<br>Creación: '+new Date(m.createdAt).toLocaleString('es-ES')+'</div><h2>👥 Operativos</h2><ul>'+ops+'</ul></section>'+pages+'</body></html>');w.document.close();setTimeout(()=>w.print(),700)};
+</script>`;
+ html=html.replace('</body>',patch+'</body>');document.open();document.write(html);document.close();
+}).catch(e=>{document.getElementById('loading').textContent='Error cargando KT Companion: '+e.message});
+</script></body></html>
