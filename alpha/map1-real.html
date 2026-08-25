@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KT Companion Alpha — Mapa 1</title>
+<style>
+html,body{margin:0;padding:0;width:100%;height:100%;background:#0b0e10;overflow:hidden}
+iframe{display:block;width:100%;height:100%;border:0}
+</style>
+</head>
+<body>
+<iframe id="appFrame" src="pilot-fixed.html?map1real=20260826" title="KT Companion"></iframe>
+<script>
+(function(){
+  const MAP_URL='https://res.cloudinary.com/fe7sozkn/image/upload/v1787691808/7ad489f1-9127-4431-a2fe-4281b537241f.jpg';
+  const frame=document.getElementById('appFrame');
+  frame.addEventListener('load',function(){
+    const w=frame.contentWindow,d=frame.contentDocument;
+    let tries=0;
+    const timer=setInterval(function(){
+      tries++;
+      if(!w || !d)return;
+      try{
+        if(typeof w.drawMapBackground!=='function'){
+          if(tries>100)clearInterval(timer);
+          return;
+        }
+        clearInterval(timer);
+        const img=new w.Image();
+        img.crossOrigin='anonymous';
+        img.onload=function(){w.__ktMap1Ready=true;if(typeof w.draw==='function')w.draw();};
+        img.onerror=function(){console.error('No se pudo cargar el Mapa 1 de Cloudinary');};
+        img.src=MAP_URL;
+        w.__ktMap1Image=img;
+        w.drawMapBackground=function(x,wid,hei){
+          x.save();
+          x.clearRect(0,0,wid,hei);
+          if(w.__ktMap1Image && w.__ktMap1Image.complete && w.__ktMap1Image.naturalWidth){
+            x.drawImage(w.__ktMap1Image,0,0,wid,hei);
+          }else{
+            x.fillStyle='#77766e';
+            x.fillRect(0,0,wid,hei);
+          }
+          x.restore();
+        };
+        // El Board ya usa aspect-ratio 30/22; reforzamos la proporción aquí.
+        const style=d.createElement('style');
+        style.textContent='.board{aspect-ratio:30/22!important;width:100%;overflow:hidden}.board canvas{width:100%!important;height:100%!important;display:block!important}';
+        d.head.appendChild(style);
+        if(typeof w.draw==='function')w.draw();
+      }catch(e){
+        console.error(e);
+        if(tries>100)clearInterval(timer);
+      }
+    },100);
+  });
+})();
+</script>
+</body>
+</html>
